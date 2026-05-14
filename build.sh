@@ -7,3 +7,8 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 
 python manage.py migrate
+
+if [ -f data.json ]; then
+    echo "Loading data from data.json..."
+    python manage.py loaddata data.json
+fi
