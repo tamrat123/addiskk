@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Files - FileTrack{% endblock %}
+
+{% block header_title %}{% trans "File Records" %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title m-0">All Digitized Files</h5>
+            {% if user.role != 'HQ_ADMIN' %}
+            <a href="{% url 'register_file' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Register New File
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="card bg-light border-0 mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">File Name</label>
+                        {{ filter.form.file_name }}
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">{% trans "Status" %}</label>
+                        {{ filter.form.status }}
+                    </div>
+                    {% if user.role == 'HQ_ADMIN' %}
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">{% trans "Branch" %}</label>
+                        {{ filter.form.branch }}
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="bi bi-search me-1"></i> Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>File ID</th>
+                        <th>File Name</th>
+                        <th>{% trans "Branch" %}</th>
+                        <th>{% trans "Operator" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Date" %} Registered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    <tr>
+                        <td><code>{{ file.file_id }}</code></td>
+                        <td class="fw-medium">{{ file.file_name }}</td>
+                        <td>{{ file.branch.name }}</td>
+                        <td>{{ file.operator.username }}</td>
+                        <td>
+                            <span class="badge {% if file.status == 'COMPLETED' %}bg-success{% elif file.status == 'IN_PROGRESS' %}bg-info{% else %}bg-secondary{% endif %}">
+                                {{ file.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ file.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No files found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

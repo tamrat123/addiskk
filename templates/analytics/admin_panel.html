@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Admin Panel" %} - Digital File Tracking{% endblock %}
+
+{% block header_title %}Headquarters {% trans "Admin Panel" %}{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- {% trans "Branch" %} Management -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title m-0">{% trans "Branch" %} Management</h5>
+                    <a href="{% url 'add_branch' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add {% trans "Branch" %}</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Branch" %}</th>
+                                <th>Region</th>
+                                <th>Operators</th>
+                                <th>File Target</th>
+                                <th>Page Target</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for branch in branches %}
+                            <tr>
+                                <td class="fw-bold text-primary">{{ branch.name }}</td>
+                                <td>{{ branch.region }}</td>
+                                <td>{{ branch.operator_count }}</td>
+                                <td class="fw-medium text-primary">{{ branch.daily_target }}</td>
+                                <td class="fw-medium text-success">{{ branch.daily_page_target }}</td>
+                                <td>
+                                    <span class="badge bg-{% if branch.status == 'Active' %}success{% elif branch.status == 'Pending' %}warning{% else %}secondary{% endif %}">
+                                        {{ branch.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'edit_branch' branch.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
+                                        <a href="{% url 'delete_branch' branch.pk %}" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted">No branches found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title m-0">User Management</h5>
+                    <a href="{% url 'add_user' %}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus"></i> Add User</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>{% trans "Branch" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td class="fw-bold">{{ u.username }}</td>
+                                <td><span class="small">{{ u.get_role_display }}</span></td>
+                                <td>{{ u.branch.name|default:"Headquarters" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if u.status == 'Active' %}success{% else %}danger{% endif %} text-uppercase" style="font-size: 0.65rem;">
+                                        {{ u.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'edit_user' u.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
+                                        <a href="{% url 'reset_password' u.pk %}" class="btn btn-sm btn-outline-warning" title="Reset {% trans "Password" %}"><i class="bi bi-key"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System {% trans "Settings" %} -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">System {% trans "Settings" %}</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Organization Target (Total Files)</label>
+                        <input type="number" name="org_target" class="form-control" value="{{ settings.organization_target }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Backup Frequency</label>
+                        <select name="backup_freq" class="form-select">
+                            <option value="Daily" {% if settings.backup_frequency == 'Daily' %}selected{% endif %}>Daily</option>
+                            <option value="Weekly" {% if settings.backup_frequency == 'Weekly' %}selected{% endif %}>Weekly</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Alert Threshold (days inactive)</label>
+                        <input type="number" name="alert_threshold" class="form-control" value="{{ settings.alert_threshold_days }}">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" name="save_settings" class="btn btn-primary">Save {% trans "Settings" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

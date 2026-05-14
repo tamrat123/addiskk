@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Reports" %} - Digital File Tracking{% endblock %}
+
+{% block header_title %}
+    {% if is_hq %}Organizational Performance Report{% else %}{{ branch.name }} Performance Report{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title m-0">Performance Data</h5>
+                    <div class="btn-group">
+                        <a href="{% url 'export_excel' %}?start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+                        <a href="{% url 'export_pdf' %}?start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}" class="btn btn-outline-danger btn-sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                    </div>
+                </div>
+
+                <!-- {% trans "Date" %} Filter Form -->
+                {% load ethiopian_calendar %}
+                <div class="mb-3">
+                    {% if start_date_obj or end_date_obj %}
+                        <span class="badge bg-light text-dark border p-2">
+                            <i class="bi bi-calendar-range me-2"></i>
+                            {% if start_date_obj %}{{ start_date_obj|to_ethiopian_full }}{% else %}መጀመሪያ{% endif %} 
+                            - 
+                            {% if end_date_obj %}{{ end_date_obj|to_ethiopian_full }}{% else %}ዛሬ{% endif %}
+                        </span>
+                    {% endif %}
+                </div>
+                <form method="get" class="row g-3 mb-4 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">ከቀን ({% trans "Start Date" %})</label>
+                        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">እስከ ቀን ({% trans "End Date" %})</label>
+                        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">አጣራ (Filter)</button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'reports' %}" class="btn btn-outline-secondary btn-sm w-100">ሁሉንም (Reset)</a>
+                    </div>
+                </form>
+                
+                <div class="table-responsive">
+                    {% if is_hq %}
+                    <!-- Tabs for HQ -->
+                    <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">
+                                <i class="bi bi-grid-3x3-gap me-2"></i> {% trans "Branch Performance Summary" %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="detailed-tab" data-bs-toggle="tab" data-bs-target="#detailed" type="button" role="tab">
+                                <i class="bi bi-list-ul me-2"></i> Detailed Daily List
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="reportTabsContent">
+                        <!-- Summary Tab -->
+                        <div class="tab-pane fade show active" id="summary" role="tabpanel">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>{% trans "Branch" %}</th>
+                                        <th>{% trans "Total Digitized" %}</th>
+                                        <th>{% trans "Total Pages" %}</th>
+                                        <th>{% trans "Daily Avg" %}</th>
+                                        <th>{% trans "Target (Period)" %}</th>
+                                        <th class="text-muted">{% trans "Total Target" %}</th>
+                                        <th>{% trans "Performance %" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in stats %}
+                                    <tr>
+                                        <td class="fw-bold">{{ stat.name }}</td>
+                                        <td>{{ stat.total_val }}</td>
+                                        <td>{{ stat.pages_val }}</td>
+                                        <td>{{ stat.daily_avg|floatformat:1 }}</td>
+                                        <td>{{ stat.period_target }}</td>
+                                        <td class="text-muted">{{ stat.total_target }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                                    <div class="progress-bar {% if stat.performance >= 100 %}bg-success{% elif stat.performance >= 70 %}bg-info{% else %}bg-warning{% endif %}" 
+                                                         role="progressbar" style="width: {{ stat.performance|floatformat:0 }}%"></div>
+                                                </div>
+                                                <span class="small fw-bold">{{ stat.performance|floatformat:1 }}%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td>OVERALL</td>
+                                        <td>{{ overall.files }}</td>
+                                        <td>{{ overall.pages }}</td>
+                                        <td>-</td>
+                                        <td>{{ overall.target }}</td>
+                                        <td class="text-muted">{{ org_target }}</td>
+                                        <td>{{ overall.performance|floatformat:1 }}%</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Detailed List Tab -->
+                        <div class="tab-pane fade" id="detailed" role="tabpanel">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>{% trans "Date" %}</th>
+                                        <th>{% trans "Branch" %}</th>
+                                        <th>{% trans "Files Digitized" %}</th>
+                                        <th>{% trans "Pages Scanned" %}</th>
+                                        <th>{% trans "Operator" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sub in submissions %}
+                                    <tr>
+                                        {% load ethiopian_calendar %}
+                                        <td>
+                                            <div class="fw-bold">{{ sub.date|to_ethiopian }}</div>
+                                            <div class="text-muted smaller">{{ sub.date }}</div>
+                                        </td>
+                                        <td class="small fw-medium">{{ sub.branch.name }}</td>
+                                        <td class="fw-bold text-primary">{{ sub.files_digitized_count }}</td>
+                                        <td class="fw-bold text-success">{{ sub.pages_scanned_count }}</td>
+                                        <td>{{ sub.operator.username }}</td>
+                                        <td>
+                                            {% with perf=sub.files_digitized_count|add:0 %}
+                                            {% with target=sub.branch.daily_target|add:0 %}
+                                            {% if perf >= target %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">Met Target</span>
+                                            {% else %}
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Below Target</span>
+                                            {% endif %}
+                                            {% endwith %}
+                                            {% endwith %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="6" class="text-center text-muted">No data found for this period.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- Branch Manager / Operator View (Simple List) -->
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Files Digitized" %}</th>
+                                <th>{% trans "Pages Scanned" %}</th>
+                                <th>{% trans "Operator" %}</th>
+                                <th>{% trans "Problems / Solutions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in submissions %}
+                            <tr>
+                                {% load ethiopian_calendar %}
+                                <td>
+                                    <div class="fw-bold">{{ sub.date|to_ethiopian }}</div>
+                                    <div class="text-muted smaller">{{ sub.date }}</div>
+                                </td>
+                                <td class="fw-bold text-primary">{{ sub.files_digitized_count }}</td>
+                                <td class="fw-bold text-success">{{ sub.pages_scanned_count }}</td>
+                                <td>{{ sub.operator.username }}</td>
+                                <td class="small">{{ sub.problems_solutions|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted">No submissions found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+
+                {% if not is_hq and summary %}
+                <div class="mt-4 p-3 bg-light rounded border">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">Period Summary ({{ summary.days }} days)</h6>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="small text-muted">Total Files</div>
+                            <div class="h5 fw-bold mb-0">{{ summary.files }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small text-muted">{% trans "Total Pages" %}</div>
+                            <div class="h5 fw-bold mb-0">{{ summary.pages }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small text-muted">Target</div>
+                            <div class="h5 fw-bold mb-0">{{ summary.target }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small text-muted">Performance</div>
+                            <div class="h5 fw-bold mb-0 text-primary">{{ summary.performance|floatformat:1 }}%</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

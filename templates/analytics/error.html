@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Error - FileTrack{% endblock %}
+
+{% block header_title %}Configuration Error{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="card p-5">
+            <div class="bi bi-exclamation-triangle-fill text-warning mb-4" style="font-size: 4rem;"></div>
+            <h3 class="mb-3">Oops! Something is missing.</h3>
+            <p class="text-muted mb-4">{{ message }}</p>
+            <div class="d-grid">
+                <a href="{% url 'logout' %}" class="btn btn-outline-primary">{% trans "Logout" %} and Try Again</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

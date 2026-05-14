@@ -1,0 +1,180 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: FileTrack\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-14 10:00+0300\n"
+"PO-Revision-Date: 2026-05-14 10:00+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: am\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Dashboard"
+msgstr "ዳሽቦርድ"
+
+msgid "Admin Panel"
+msgstr "የአስተዳዳሪ ፓነል"
+
+msgid "Branches"
+msgstr "ቅርንጫፎች"
+
+msgid "Audit Logs"
+msgstr "የኦዲት ምዝግብ ማስታወሻዎች"
+
+msgid "File Records"
+msgstr "የፋይል መዝገቦች"
+
+msgid "Reports"
+msgstr "ሪፖርቶች"
+
+msgid "Logout"
+msgstr "ውጣ"
+
+msgid "Login"
+msgstr "ግባ"
+
+msgid "Username"
+msgstr "የተጠቃሚ ስም"
+
+msgid "Password"
+msgstr "የይለፍ ቃል"
+
+msgid "Total Files Digitized"
+msgstr "ጠቅላላ ዲጂታይዝ የተደረጉ ፋይሎች"
+
+msgid "Total Pages Scanned"
+msgstr "ጠቅላላ ስካን የተደረጉ ገጾች"
+
+msgid "Today's Progress"
+msgstr "የዛሬው አፈፃፀም"
+
+msgid "Active Branches"
+msgstr "ንቁ ቅርንጫፎች"
+
+msgid "Completion Rate"
+msgstr "የአፈፃፀም ደረጃ"
+
+msgid "Branch Performance Summary"
+msgstr "የቅርንጫፍ አፈፃፀም ማጠቃለያ"
+
+msgid "Branch"
+msgstr "ቅርንጫፍ"
+
+msgid "Total Digitized"
+msgstr "ጠቅላላ ዲጂታይዝ የተደረገ"
+
+msgid "Today's Work"
+msgstr "የዛሬ ስራ"
+
+msgid "Daily Target"
+msgstr "የቀን ግብ"
+
+msgid "Total Target"
+msgstr "ጠቅላላ ግብ"
+
+msgid "Performance (Today)"
+msgstr "አፈፃፀም (ዛሬ)"
+
+msgid "Performance (Overall)"
+msgstr "አፈፃፀም (ጠቅላላ)"
+
+msgid "Status"
+msgstr "ሁኔታ"
+
+msgid "Active Today"
+msgstr "ዛሬ ንቁ"
+
+msgid "Inactive Today"
+msgstr "ዛሬ ንቁ ያልሆነ"
+
+msgid "Daily Digitization (Last 7 Days)"
+msgstr "የቀን ዲጂታይዜሽን (ላለፉት 7 ቀናት)"
+
+msgid "Volume Distribution"
+msgstr "የስራ መጠን ስርጭት"
+
+msgid "Monthly Performance"
+msgstr "የወር አፈፃፀም"
+
+msgid "Recent Audit Activity"
+msgstr "የቅርብ ጊዜ የኦዲት እንቅስቃሴዎች"
+
+msgid "Branch Name"
+msgstr "የቅርንጫፍ ስም"
+
+msgid "Total Pages"
+msgstr "ጠቅላላ ገጾች"
+
+msgid "Daily Avg"
+msgstr "የቀን አማካይ"
+
+msgid "Target (Period)"
+msgstr "የጊዜ ግብ"
+
+msgid "Full Project Goal"
+msgstr "ጠቅላላ የፕሮጀክቱ ግብ"
+
+msgid "Performance %"
+msgstr "የአፈፃፀም %"
+
+msgid "Filter Reports"
+msgstr "ሪፖርቶችን አጣራ"
+
+msgid "Start Date"
+msgstr "መጀመሪያ ቀን"
+
+msgid "End Date"
+msgstr "መጨረሻ ቀን"
+
+msgid "Apply Filter"
+msgstr "አጣራ"
+
+msgid "Export"
+msgstr "ኤክስፖርት"
+
+msgid "Notifications"
+msgstr "ማሳወቂያዎች"
+
+msgid "Mark all as read"
+msgstr "ሁሉንም እንደተነበበ አድርግ"
+
+msgid "View all notifications"
+msgstr "ሁሉንም ማሳወቂያዎች ተመልከት"
+
+msgid "Profile"
+msgstr "ፕሮፋይል"
+
+msgid "Settings"
+msgstr "ቅንብሮች"
+
+msgid "Users"
+msgstr "ተጠቃሚዎች"
+
+msgid "Add New Submission"
+msgstr "አዲስ ስራ መዝግብ"
+
+msgid "Date"
+msgstr "ቀን"
+
+msgid "Files Digitized"
+msgstr "ዲጂታይዝ የተደረጉ ፋይሎች"
+
+msgid "Pages Scanned"
+msgstr "ስካን የተደረጉ ገጾች"
+
+msgid "Operator"
+msgstr "ኦፕሬተር"
+
+msgid "Problems / Solutions"
+msgstr "ችግሮች / መፍትሄዎች"
+
+msgid "Comments"
+msgstr "አስተያየቶች"
+
+msgid "Submit Work"
+msgstr "ስራውን ላክ"
+
+msgid "Digital File Tracking & Monitoring System"
+msgstr "የዲጂታል ፋይል ክትትል እና ቁጥጥር ስርዓት"

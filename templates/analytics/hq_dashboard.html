@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}HQ {% trans "Dashboard" %} - Digital File Tracking{% endblock %}
+
+{% block header_title %}Headquarters {% trans "Dashboard" %}{% endblock %}
+
+{% block content %}
+<!-- Top Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted small fw-bold">{% trans "TOTAL DIGITIZED" %}</span>
+                <i class="bi bi-files text-primary"></i>
+            </div>
+            <h3 class="fw-bold mb-1">{{ total_files|default:"0" }}</h3>
+            <span class="text-muted small fw-medium">Total Files in System</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted small fw-bold">{% trans "TOTAL PAGES" %}</span>
+                <i class="bi bi-book text-success"></i>
+            </div>
+            <h3 class="fw-bold mb-1">{{ total_pages|default:"0" }}</h3>
+            <span class="text-muted small fw-medium">Scanned Pages</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted small fw-bold">{% trans "ACTIVE BRANCHES" %}</span>
+                <i class="bi bi-geo-alt text-info"></i>
+            </div>
+            <h3 class="fw-bold mb-1">{{ active_branches }}</h3>
+            <span class="text-info small fw-medium">{% trans "Status" %} Monitor</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted small fw-bold">{% trans "OVERALL COMPLETION" %}</span>
+                <i class="bi bi-pie-chart text-warning"></i>
+            </div>
+            <h3 class="fw-bold mb-1">{{ completion_rate }}</h3>
+            <span class="text-muted small fw-medium">Target: {{ org_target }} files</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Daily Trends -->
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Daily Digitization (Last 7 Days)</h5>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="dailyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- {% trans "Branch" %} Contribution (Pie) -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">{% trans "Volume Distribution" %}</h5>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="branchPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Monthly Trends -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">{% trans "Monthly Performance" %}</h5>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Activity Log Summary -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">{% trans "Recent Audit Activity" %}</h5>
+                <div class="list-group list-group-flush">
+                    {% for log in audit_logs %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+{% load ethiopian_calendar %}
+                            <div class="smaller text-muted">{{ log.timestamp|to_ethiopian }}</div>
+                            <span class="small fw-bold">{{ log.user.username }}</span>
+                            <span class="text-muted smaller">{{ log.timestamp|timesince }} ago</span>
+                        </div>
+                        <div class="small text-truncate">{{ log.action }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">{% trans "Branch Performance Summary" %}</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Branch" %}</th>
+                                <th>{% trans "Total Digitized" %}</th>
+                                <th>{% trans "Today's Work" %}</th>
+                                <th>{% trans "Daily Target" %}</th>
+                                <th>{% trans "Total Target" %}</th>
+                                <th>Performance (Today)</th>
+                                <th>Performance (Overall)</th>
+                                <th>{% trans "Status" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in branch_stats %}
+                            <tr>
+                                <td class="fw-medium text-primary">{{ stat.name }}</td>
+                                <td>{{ stat.total_docs|default:"0" }}</td>
+                                <td class="text-success fw-bold">{{ stat.today_docs|default:"0" }}</td>
+                                <td>{{ stat.daily_target }}</td>
+                                <td class="text-muted">{{ stat.total_target }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                            <div class="progress-bar {% if stat.today_perf >= 100 %}bg-success{% elif stat.today_perf >= 50 %}bg-primary{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" style="width: {{ stat.today_perf|floatformat:0 }}%"></div>
+                                        </div>
+                                        <span class="small fw-bold">{{ stat.today_perf|floatformat:1 }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                            <div class="progress-bar {% if stat.total_perf >= 100 %}bg-success{% elif stat.total_perf >= 50 %}bg-primary{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" style="width: {{ stat.total_perf|floatformat:0 }}%"></div>
+                                        </div>
+                                        <span class="small fw-bold text-muted">{{ stat.total_perf|floatformat:1 }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if stat.today_docs %}success{% else %}warning{% endif %} text-uppercase" style="font-size: 0.65rem;">
+                                        {% if stat.today_docs %}{% trans "Active Today" %}{% else %}{% trans "Inactive Today" %}{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <th>OVERALL SYSTEM (Target: {{ org_target }})</th>
+                                <th>{{ total_files }}</th>
+                                <th>{{ today_progress }}</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>
+                                    <div class="d-flex align-items-center text-white">
+                                        <span class="small fw-bold me-2">{{ overall_today_perf|floatformat:1 }}%</span>
+                                        <div class="progress flex-grow-1" style="height: 6px; background-color: rgba(255,255,255,0.2);">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ overall_today_perf|floatformat:0 }}%"></div>
+                                        </div>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="d-flex align-items-center text-white">
+                                        <span class="small fw-bold me-2">{{ overall_total_perf|floatformat:1 }}%</span>
+                                        <div class="progress flex-grow-1" style="height: 6px; background-color: rgba(255,255,255,0.2);">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ overall_total_perf|floatformat:0 }}%"></div>
+                                        </div>
+                                    </div>
+                                </th>
+                                <th>-</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Daily Trend Chart
+    const dailyCtx = document.getElementById('dailyTrendChart').getContext('2d');
+    new Chart(dailyCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for d in daily_trends %}'{{ d.label }}',{% endfor %}],
+            datasets: [{
+                label: '{% trans "Files Digitized" %}',
+                data: [{% for d in daily_trends %}{{ d.count }},{% endfor %}],
+                fill: true,
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                borderColor: 'rgba(79, 70, 229, 1)',
+                tension: 0.4
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // {% trans "Branch" %} Distribution Pie Chart
+    const pieCtx = document.getElementById('branchPieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for b in branch_dist %}'{{ b.label }}',{% endfor %}],
+            datasets: [{
+                data: [{% for b in branch_dist %}{{ b.count }},{% endfor %}],
+                backgroundColor: [
+                    '#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899'
+                ]
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+        }
+    });
+
+    // Monthly Trend Chart
+    const monthlyCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for m in monthly_trends %}'{{ m.label }}',{% endfor %}],
+            datasets: [{
+                label: 'Monthly Volume',
+                data: [{% for m in monthly_trends %}{{ m.count }},{% endfor %}],
+                backgroundColor: '#10B981',
+                borderRadius: 5
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+</script>
+<style>
+    .smaller { font-size: 0.7rem; }
+</style>
+{% endblock %}

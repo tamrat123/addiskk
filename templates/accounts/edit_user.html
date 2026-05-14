@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Edit User - Digital File Tracking{% endblock %}
+
+{% block header_title %}Edit User Account{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Username" %}</label>
+                        <input type="text" name="username" class="form-control" value="{{ edit_user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select">
+                            <option value="HQ_ADMIN" {% if edit_user.role == 'HQ_ADMIN' %}selected{% endif %}>Headquarters Admin</option>
+                            <option value="BRANCH_MANAGER" {% if edit_user.role == 'BRANCH_MANAGER' %}selected{% endif %}>{% trans "Branch" %} Manager</option>
+                            <option value="OPERATOR" {% if edit_user.role == 'OPERATOR' %}selected{% endif %}>{% trans "Operator" %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Branch" %}</label>
+                        <select name="branch" class="form-select">
+                            <option value="">None / Headquarters</option>
+                            {% for branch in branches %}
+                            <option value="{{ branch.id }}" {% if edit_user.branch.id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "Status" %}</label>
+                        <select name="status" class="form-select">
+                            <option value="Active" {% if edit_user.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="Inactive" {% if edit_user.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'admin_panel' %}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Update User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

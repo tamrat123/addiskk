@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load math_extras %}
+
+{% block title %}{% trans "Branch" %} {% trans "Dashboard" %} - FileTrack{% endblock %}
+
+{% block header_title %}{{ branch.name }} {% trans "Dashboard" %}{% endblock %}
+
+{% block content %}
+<!-- Quick Actions & Recent Submissions at the Top -->
+<div class="row g-4 mb-4">
+    {% if user.role != 'BRANCH_MANAGER' %}
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Quick Actions</h5>
+                <div class="d-grid gap-3">
+                    <a href="{% url 'register_file' %}" class="btn btn-primary py-3">
+                        <i class="bi bi-plus-circle me-2"></i> Register New File (Metadata)
+                    </a>
+                    <a href="{% url 'submit_work' %}" class="btn btn-outline-primary py-3">
+                        <i class="bi bi-file-earmark-check me-2"></i> Submit Daily Work Numbers
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Recent Daily Submissions</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>Files</th>
+                                <th>Pages</th>
+                                <th>{% trans "Operator" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in recent_submissions %}
+                            <tr>
+                                <td class="small">{{ submission.date }}</td>
+                                <td class="fw-bold text-primary">{{ submission.files_digitized_count }}</td>
+                                <td class="fw-bold text-success">{{ submission.pages_scanned_count }}</td>
+                                <td class="small text-muted">{{ submission.operator.username }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3 text-muted">No recent submissions.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card bg-primary text-white">
+            <h6 class="text-uppercase small fw-bold mb-1">Total {% trans "Files Digitized" %}</h6>
+            <h2 class="mb-0">{{ total_files }}</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-success text-white">
+            <h6 class="text-uppercase small fw-bold mb-1">{% trans "Total Pages" %} Scanned</h6>
+            <h2 class="mb-0">{{ total_pages }}</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-info text-white">
+            <h6 class="text-uppercase small fw-bold mb-1">Target Achievement</h6>
+            <h2 class="mb-0">{{ completion_rate }}</h2>
+            <small class="opacity-75">vs {% trans "Daily Target" %}: {{ branch.daily_target }}</small>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Chart -->
+<div class="row g-4 mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Your Recent Performance (Last 7 Days)</h5>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="branchTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const ctx = document.getElementById('branchTrendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for d in daily_trends %}'{{ d.label }}',{% endfor %}],
+            datasets: [{
+                label: '{% trans "Files Digitized" %}',
+                data: [{% for d in daily_trends %}{{ d.count }},{% endfor %}],
+                fill: true,
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                borderColor: 'rgba(79, 70, 229, 1)',
+                tension: 0.4,
+                pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true,
+                    grid: { borderDash: [5, 5] }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
