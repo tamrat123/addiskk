@@ -1,4 +1,6 @@
 import threading
+from django.db import ProgrammingError, OperationalError
+from django.shortcuts import render
 
 _thread_locals = threading.local()
 
@@ -15,6 +17,15 @@ class RequestMiddleware:
         if hasattr(_thread_locals, 'request'):
             del _thread_locals.request
         return response
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, (ProgrammingError, OperationalError)):
+            if 'does not exist' in str(exception) or 'no such table' in str(exception).lower():
+                return render(request, 'analytics/error.html', {
+                    'message': 'The database is currently being initialized or updated. Please run migrations or wait a moment.',
+                    'title': 'Database Error'
+                }, status=503)
+        return None
 
 def get_client_ip():
     request = get_current_request()
