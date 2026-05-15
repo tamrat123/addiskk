@@ -301,7 +301,7 @@ def export_excel(request):
     workbook = xlsxwriter.Workbook(output)
     worksheet = workbook.add_worksheet('Branch Statistics')
     header_fmt = workbook.add_format({'bold': True, 'bg_color': '#4F46E5', 'font_color': 'white'})
-    headers = ['Branch Name', 'Files Digitized', 'Pages Scanned', 'Daily Target', 'Total Target']
+    headers = ['የቅርንጫፍ ስም', 'ዲጂታይዝ የተደረጉ', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ']
     for col, header in enumerate(headers):
         worksheet.write(0, col, header, header_fmt)
     
