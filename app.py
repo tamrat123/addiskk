@@ -1,4 +1,4 @@
 from core.wsgi import application
 
-# This is the entry point for Vercel
+# Vercel looks for 'app' in 'app.py' by default
 app = application
