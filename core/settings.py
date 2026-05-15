@@ -95,6 +95,9 @@ elif os.environ.get('POSTGRES_URL'):
     DATABASES = {
         'default': dj_database_url.config(env='POSTGRES_URL', conn_max_age=600)
     }
+elif os.environ.get('VERCEL'):
+    # This will trigger if on Vercel but no DB URL is found
+    raise RuntimeError("Vercel deployment detected, but DATABASE_URL or POSTGRES_URL is missing in Environment Variables!")
 else:
     DATABASES = {
         'default': {
