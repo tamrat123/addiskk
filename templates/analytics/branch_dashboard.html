@@ -9,7 +9,7 @@
 {% block content %}
 <!-- Quick Actions & Recent Submissions at the Top -->
 <div class="row g-4 mb-4">
-    {% if user.role != 'BRANCH_MANAGER' %}
+    {% if user.role == 'OPERATOR' %}
     <div class="col-md-5">
         <div class="card h-100">
             <div class="card-body">

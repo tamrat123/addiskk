@@ -60,3 +60,17 @@ def submit_work(request):
     else:
         form = DailyWorkSubmissionForm()
     return render(request, 'tracking/file_form.html', {'form': form, 'title': 'Submit Daily Work'})
+
+@login_required
+def daily_work_list(request):
+    submissions = DailyWorkSubmission.objects.all().order_by('-date', '-created_at')
+    
+    if request.user.role != 'HQ_ADMIN':
+        if not request.user.branch:
+            messages.error(request, "You are not assigned to any branch.")
+            return redirect('dashboard')
+        submissions = submissions.filter(branch=request.user.branch)
+        
+    return render(request, 'tracking/daily_work_list.html', {
+        'submissions': submissions
+    })

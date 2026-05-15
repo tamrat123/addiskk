@@ -5,4 +5,5 @@ urlpatterns = [
     path('files/', views.file_list, name='file_list'),
     path('files/register/', views.register_file, name='register_file'),
     path('work/submit/', views.submit_work, name='submit_work'),
+    path('work/list/', views.daily_work_list, name='daily_work_list'),
 ]

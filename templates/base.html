@@ -184,6 +184,9 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'audit_logs' %}active{% endif %}" href="{% url 'audit_logs' %}">
                 <i class="bi bi-shield-lock"></i> {% trans "Audit Logs" %}
             </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'daily_work_list' %}active{% endif %}" href="{% url 'daily_work_list' %}">
+                <i class="bi bi-list-check"></i> {% trans "Detailed Daily List" %}
+            </a>
             {% endif %}
             <a class="nav-link {% if request.resolver_match.url_name == 'file_list' %}active{% endif %}" href="{% url 'file_list' %}">
                 <i class="bi bi-file-earmark-text"></i> {% trans "File Records" %}
