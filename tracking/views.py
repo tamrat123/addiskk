@@ -63,7 +63,7 @@ def submit_work(request):
 
 @login_required
 def daily_work_list(request):
-    submissions = DailyWorkSubmission.objects.all().order_by('-date', '-created_at')
+    submissions = DailyWorkSubmission.objects.all().order_by('-date', '-submitted_at')
     
     if request.user.role != 'HQ_ADMIN':
         if not request.user.branch:
