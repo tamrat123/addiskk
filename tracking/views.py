@@ -74,3 +74,38 @@ def daily_work_list(request):
     return render(request, 'tracking/daily_work_list.html', {
         'submissions': submissions
     })
+
+@login_required
+def edit_work(request, submission_id):
+    submission = get_object_or_404(DailyWorkSubmission, id=submission_id)
+    
+    # HQ Admin or the operator who created it can edit
+    if request.user.role != 'HQ_ADMIN' and submission.operator != request.user:
+        messages.error(request, "You do not have permission to edit this submission.")
+        return redirect('daily_work_list')
+        
+    if request.method == 'POST':
+        form = DailyWorkSubmissionForm(request.POST, instance=submission)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Daily work updated successfully.")
+            return redirect('daily_work_list')
+    else:
+        form = DailyWorkSubmissionForm(instance=submission)
+        
+    return render(request, 'tracking/file_form.html', {'form': form, 'title': 'Edit Daily Work'})
+
+@login_required
+def delete_work(request, submission_id):
+    submission = get_object_or_404(DailyWorkSubmission, id=submission_id)
+    
+    if request.user.role != 'HQ_ADMIN':
+        messages.error(request, "Only Headquarters Admin can delete submissions.")
+        return redirect('daily_work_list')
+        
+    if request.method == 'POST':
+        submission.delete()
+        messages.success(request, "Daily work submission deleted successfully.")
+        return redirect('daily_work_list')
+        
+    return render(request, 'tracking/confirm_delete.html', {'object': submission, 'title': 'Delete Submission'})

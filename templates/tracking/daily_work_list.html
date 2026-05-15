@@ -23,6 +23,7 @@
                         <th>Pages Scanned</th>
                         <th>Problems Encountered</th>
                         <th>Submission Time</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,10 +42,22 @@
                             {% endif %}
                         </td>
                         <td class="small text-muted">{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'edit_work' sub.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if user.role == 'HQ_ADMIN' %}
+                                <a href="{% url 'delete_work' sub.id %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">No daily submissions found.</td>
+                        <td colspan="8" class="text-center py-4 text-muted">No daily submissions found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
