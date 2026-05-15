@@ -328,10 +328,16 @@ def export_pdf(request):
     from reportlab.pdfbase.ttfonts import TTFont
     
     # Register Amharic-compatible font
-    font_path = r"C:\Windows\Fonts\nyala.ttf"
-    if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('Nyala', font_path))
-        main_font = 'Nyala'
+    # Look for bundled font first (for Production), then fallback to Windows local path
+    bundled_font = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'AbyssinicaSIL-Regular.ttf')
+    windows_font = r"C:\Windows\Fonts\nyala.ttf"
+    
+    if os.path.exists(bundled_font):
+        pdfmetrics.registerFont(TTFont('AmharicFont', bundled_font))
+        main_font = 'AmharicFont'
+    elif os.path.exists(windows_font):
+        pdfmetrics.registerFont(TTFont('AmharicFont', windows_font))
+        main_font = 'AmharicFont'
     else:
         main_font = 'Helvetica'
 
