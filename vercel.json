@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "core/wsgi.py"
+      "destination": "index.py"
     }
   ]
 }
