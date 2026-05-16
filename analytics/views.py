@@ -263,7 +263,7 @@ def reports_view(request):
             s.total_val = s.total or 0
             s.pages_val = s.pages or 0
             s.daily_avg = s.total_val / days
-            s.period_target = s.daily_target * days
+            s.period_target = 400 * days
             s.performance = (s.total_val / s.period_target * 100) if s.period_target > 0 else 0
             
             overall_total_files += s.total_val
@@ -313,7 +313,7 @@ def reports_view(request):
         
         total_files = submissions.aggregate(Sum('files_digitized_count'))['files_digitized_count__sum'] or 0
         total_pages = submissions.aggregate(Sum('pages_scanned_count'))['pages_scanned_count__sum'] or 0
-        period_target = branch.daily_target * days
+        period_target = 400 * days
         performance = (total_files / period_target * 100) if period_target > 0 else 0
 
         return render(request, 'analytics/reports.html', {
