@@ -61,7 +61,7 @@
     </div>
 </div>
 
-<!-- Statistics Row -->
+<!-- Statistics Row 1 -->
 <div class="row g-4 mb-4">
     <div class="col-md-4">
         <div class="card stat-card bg-primary text-white">
@@ -77,9 +77,33 @@
     </div>
     <div class="col-md-4">
         <div class="card stat-card bg-info text-white">
-            <h6 class="text-uppercase small fw-bold mb-1">Target Achievement</h6>
+            <h6 class="text-uppercase small fw-bold mb-1">Overall Completion</h6>
             <h2 class="mb-0">{{ completion_rate }}</h2>
-            <small class="opacity-75">vs {% trans "Daily Target" %}: {{ branch.daily_target }}</small>
+            <small class="opacity-75">Target: {{ branch.total_target }}</small>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row 2 -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card bg-warning text-dark">
+            <h6 class="text-uppercase small fw-bold mb-1">Remaining Files</h6>
+            <h2 class="mb-0">{{ remaining_files }}</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-secondary text-white">
+            <h6 class="text-uppercase small fw-bold mb-1">Expected Finish Days</h6>
+            <h2 class="mb-0">{{ expected_finish_days|floatformat:1 }}</h2>
+            <small class="opacity-75">At 400 files/day</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-dark text-white">
+            <h6 class="text-uppercase small fw-bold mb-1">Branch Rank</h6>
+            <h2 class="mb-0">#{{ branch_rank }}</h2>
+            <small class="opacity-75">Out of all branches</small>
         </div>
     </div>
 </div>

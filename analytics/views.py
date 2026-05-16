@@ -136,8 +136,24 @@ def branch_dashboard(request):
     )
     total_files = stats['total'] or 0
     total_pages = stats['pages'] or 0
-    completion_rate = (total_files / branch.daily_target * 100) if branch.daily_target > 0 else 0
+    completion_rate = (total_files / branch.total_target * 100) if branch.total_target > 0 else 0
     recent_submissions = base_qs.order_by('-date')[:10]
+    
+    fixed_daily_target = 400
+    remaining_files = branch.total_target - total_files
+    if remaining_files < 0:
+        remaining_files = 0
+    expected_finish_days = remaining_files / fixed_daily_target
+
+    all_branches = Branch.objects.annotate(
+        total_docs=Sum('dailyworksubmission__files_digitized_count')
+    )
+    for b in all_branches:
+        b.total_docs_val = b.total_docs or 0
+        b.total_perf = (b.total_docs_val / b.total_target * 100) if b.total_target > 0 else 0
+    
+    all_branches = sorted(all_branches, key=lambda x: x.total_perf, reverse=True)
+    branch_rank = next((idx for idx, b in enumerate(all_branches, 1) if b.id == branch.id), "-")
     
     # Branch-specific daily trend
     today = datetime.date.today()
@@ -160,6 +176,9 @@ def branch_dashboard(request):
         'completion_rate': f"{completion_rate:.1f}%",
         'recent_submissions': recent_submissions,
         'daily_trends': daily_trends,
+        'remaining_files': remaining_files,
+        'expected_finish_days': expected_finish_days,
+        'branch_rank': branch_rank,
     }
     return render(request, 'analytics/branch_dashboard.html', context)
 
