@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load math_extras %}
+{% load ethiopian_calendar %}
 
 {% block title %}{% trans "Branch" %} {% trans "Dashboard" %} - FileTrack{% endblock %}
 
@@ -43,7 +44,7 @@
                         <tbody>
                             {% for submission in recent_submissions %}
                             <tr>
-                                <td class="small">{{ submission.date }}</td>
+                                <td class="small">{{ submission.date|to_ethiopian }}</td>
                                 <td class="fw-bold text-primary">{{ submission.files_digitized_count }}</td>
                                 <td class="fw-bold text-success">{{ submission.pages_scanned_count }}</td>
                                 <td class="small text-muted">{{ submission.operator.username }}</td>

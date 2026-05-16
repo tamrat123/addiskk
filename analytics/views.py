@@ -49,7 +49,7 @@ def hq_dashboard(request):
     
     for s in branch_stats:
         s.fixed_daily_target = 400
-        s.fixed_page_target = 1200
+        s.fixed_page_target = 12000
         
         s.today_docs_val = s.today_docs or 0
         s.total_docs_val = s.total_docs or 0
@@ -78,6 +78,9 @@ def hq_dashboard(request):
     overall_today_perf = (overall_today / 4800) * 100
     overall_total_perf = (overall_total / 69929) * 100
 
+    from ethiopian_date import EthiopianDateConverter
+    months_am = ["መስከረም", "ጥቅምት", "ህዳር", "ታህሳስ", "ጥር", "የካቲት", "መጋቢት", "ሚያዝያ", "ግንቦት", "ሰኔ", "ሐምሌ", "ነሐሴ", "ጳጉሜ"]
+
     # Daily Trend (Last 7 Days)
     end_date = today
     start_date = end_date - datetime.timedelta(days=6)
@@ -89,7 +92,12 @@ def hq_dashboard(request):
     daily_trends = []
     curr = start_date
     while curr <= end_date:
-        daily_trends.append({'label': curr.strftime('%b %d'), 'count': trends_dict.get(curr, 0)})
+        try:
+            eth_date = EthiopianDateConverter.to_ethiopian(curr.year, curr.month, curr.day)
+            label = f"{months_am[eth_date.month-1]} {eth_date.day}"
+        except:
+            label = curr.strftime('%b %d')
+        daily_trends.append({'label': label, 'count': trends_dict.get(curr, 0)})
         curr += datetime.timedelta(days=1)
 
     # Monthly Trend (Last 6 Months)
@@ -97,7 +105,15 @@ def hq_dashboard(request):
         .values('month') \
         .annotate(count=Sum('files_digitized_count')) \
         .order_by('month')[:6]
-    monthly_trends = [{'label': s['month'].strftime('%B'), 'count': s['count']} for s in monthly_subs]
+    monthly_trends = []
+    for s in monthly_subs:
+        m_date = s['month']
+        try:
+            eth_date = EthiopianDateConverter.to_ethiopian(m_date.year, m_date.month, m_date.day)
+            label = months_am[eth_date.month-1]
+        except:
+            label = m_date.strftime('%B')
+        monthly_trends.append({'label': label, 'count': s['count']})
     
     # Branch Distribution (Pie Chart Data)
     branch_dist = [{'label': b.name, 'count': b.total_docs or 0} for b in branch_stats if (b.total_docs or 0) > 0]
@@ -155,6 +171,9 @@ def branch_dashboard(request):
     all_branches = sorted(all_branches, key=lambda x: x.total_perf, reverse=True)
     branch_rank = next((idx for idx, b in enumerate(all_branches, 1) if b.id == branch.id), "-")
     
+    from ethiopian_date import EthiopianDateConverter
+    months_am = ["መስከረም", "ጥቅምት", "ህዳር", "ታህሳስ", "ጥር", "የካቲት", "መጋቢት", "ሚያዝያ", "ግንቦት", "ሰኔ", "ሐምሌ", "ነሐሴ", "ጳጉሜ"]
+
     # Branch-specific daily trend
     today = datetime.date.today()
     start_date = today - datetime.timedelta(days=6)
@@ -166,7 +185,12 @@ def branch_dashboard(request):
     daily_trends = []
     curr = start_date
     while curr <= today:
-        daily_trends.append({'label': curr.strftime('%b %d'), 'count': trends_dict.get(curr, 0)})
+        try:
+            eth_date = EthiopianDateConverter.to_ethiopian(curr.year, curr.month, curr.day)
+            label = f"{months_am[eth_date.month-1]} {eth_date.day}"
+        except:
+            label = curr.strftime('%b %d')
+        daily_trends.append({'label': label, 'count': trends_dict.get(curr, 0)})
         curr += datetime.timedelta(days=1)
 
     context = {
