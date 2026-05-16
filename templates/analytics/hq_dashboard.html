@@ -111,106 +111,365 @@
     </div>
 </div>
 
-<div class="row g-4">
+<style>
+    /* Premium Design System */
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --dark-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    .premium-table-card {
+        border-radius: 1.5rem;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .premium-table-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 45px rgba(31, 38, 135, 0.12);
+    }
+
+    .premium-table-header {
+        background: linear-gradient(to right, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.8));
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .premium-table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .premium-table thead th {
+        background: transparent;
+        color: #64748b;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 2px solid #e2e8f0;
+        white-space: nowrap;
+    }
+
+    .premium-table tbody tr {
+        transition: all 0.2s ease-in-out;
+        position: relative;
+    }
+
+    .premium-table tbody tr:hover {
+        background-color: rgba(248, 250, 252, 0.6);
+        transform: scale(1.005);
+        z-index: 1;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+
+    .premium-table tbody td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+
+    .rank-badge {
+        font-size: 0.8rem;
+        font-weight: 800;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--dark-gradient);
+        color: white;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+    }
+
+    .rank-1 { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
+    .rank-2 { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3); }
+    .rank-3 { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); box-shadow: 0 4px 10px rgba(180, 83, 9, 0.3); }
+
+    .modern-progress-container {
+        position: relative;
+        padding-top: 4px;
+    }
+
+    .modern-progress {
+        height: 8px;
+        border-radius: 50rem;
+        background-color: #e2e8f0;
+        overflow: hidden;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .modern-progress .progress-bar {
+        border-radius: 50rem;
+        transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: visible;
+    }
+
+    .modern-progress .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .stat-value {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1.05rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .eta-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(241, 245, 249, 0.8);
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.4rem 0.75rem;
+        font-weight: 600;
+        color: #334155;
+        transition: all 0.2s;
+    }
+
+    .premium-table tbody tr:hover .eta-badge {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .system-footer {
+        background: var(--dark-gradient);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .system-footer::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    }
+
+    .system-footer th {
+        padding: 1.5rem;
+        font-weight: 600;
+        border-top: none;
+        color: #f8fafc;
+        vertical-align: middle;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-inactive {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    
+    .status-active i, .status-inactive i {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+    }
+</style>
+
+<div class="row g-4 mt-2">
     <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title mb-4">{% trans "Branch Performance Summary" %}</h5>
+        <div class="card premium-table-card">
+            <div class="premium-table-header p-4 d-flex justify-content-between align-items-center">
+                <h5 class="card-title m-0 fw-bold text-dark d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
+                        <i class="bi bi-graph-up-arrow fs-5"></i>
+                    </div>
+                    {% trans "Branch Performance Overview" %}
+                </h5>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold border border-primary border-opacity-25">
+                        <i class="bi bi-calendar-day me-1"></i> Today
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
+                    <table class="table premium-table">
+                        <thead>
                             <tr>
-                                <th>Rank</th>
-                                <th>{% trans "Branch" %}</th>
-                                <th>Daily Target</th>
-                                <th>Total Target</th>
-                                <th>Daily Pages Scanned</th>
-                                <th>{% trans "Today's Work" %}</th>
-                                <th>{% trans "Total Digitized" %}</th>
-                                <th>Performance (Today)</th>
-                                <th>Performance (Overall)</th>
-                                <th>Page Performance</th>
-                                <th>Remaining Files</th>
-                                <th>Expected Finish Days</th>
-                                <th>{% trans "Status" %}</th>
+                                <th class="text-center" width="5%">Rank</th>
+                                <th width="20%">{% trans "Branch Details" %}</th>
+                                <th width="15%">Targets</th>
+                                <th width="20%">Today's Performance</th>
+                                <th width="20%">Overall Progress</th>
+                                <th width="10%" class="text-center">ETA</th>
+                                <th width="10%" class="text-center">{% trans "Status" %}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for stat in branch_stats %}
                             <tr>
-                                <td><span class="badge bg-secondary">#{{ stat.rank }}</span></td>
-                                <td class="fw-medium text-primary">{{ stat.name }}</td>
-                                <td>{{ stat.fixed_daily_target }}</td>
-                                <td class="text-muted">{{ stat.total_target }}</td>
-                                <td>{{ stat.fixed_page_target }}</td>
-                                <td class="text-success fw-bold">{{ stat.today_docs_val }}</td>
-                                <td>{{ stat.total_docs_val }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                                            <div class="progress-bar {% if stat.today_perf >= 100 %}bg-success{% elif stat.today_perf >= 50 %}bg-primary{% else %}bg-danger{% endif %}" 
-                                                 role="progressbar" style="width: {{ stat.today_perf|floatformat:0 }}%"></div>
-                                        </div>
-                                        <span class="small fw-bold">{{ stat.today_perf|floatformat:1 }}%</span>
-                                    </div>
+                                <td class="text-center">
+                                    <span class="rank-badge {% if stat.rank == 1 %}rank-1{% elif stat.rank == 2 %}rank-2{% elif stat.rank == 3 %}rank-3{% endif %}">
+                                        {{ stat.rank }}
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                                            <div class="progress-bar {% if stat.total_perf >= 100 %}bg-success{% elif stat.total_perf >= 50 %}bg-primary{% else %}bg-danger{% endif %}" 
-                                                 role="progressbar" style="width: {{ stat.total_perf|floatformat:0 }}%"></div>
+                                        <div class="ms-2">
+                                            <div class="stat-value">{{ stat.name }}</div>
+                                            <div class="stat-label">Total Target: {{ stat.total_target|default:"0" }} files</div>
                                         </div>
-                                        <span class="small fw-bold text-muted">{{ stat.total_perf|floatformat:1 }}%</span>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                                            <div class="progress-bar {% if stat.page_perf >= 100 %}bg-success{% elif stat.page_perf >= 50 %}bg-primary{% else %}bg-danger{% endif %}" 
-                                                 role="progressbar" style="width: {{ stat.page_perf|floatformat:0 }}%"></div>
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                            <span class="fw-bold text-dark">{{ stat.fixed_daily_target }} <span class="stat-label">files/day</span></span>
                                         </div>
-                                        <span class="small fw-bold text-muted">{{ stat.page_perf|floatformat:1 }}%</span>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-break text-success me-2"></i>
+                                            <span class="fw-bold text-dark">{{ stat.fixed_page_target }} <span class="stat-label">pages/day</span></span>
+                                        </div>
                                     </div>
                                 </td>
-                                <td>{{ stat.remaining_files }}</td>
-                                <td>{{ stat.expected_finish_days|floatformat:1 }}</td>
                                 <td>
-                                    <span class="badge bg-{% if stat.today_docs_val %}success{% else %}warning{% endif %} text-uppercase" style="font-size: 0.65rem;">
-                                        {% if stat.today_docs_val %}{% trans "Active Today" %}{% else %}{% trans "Inactive Today" %}{% endif %}
+                                    <div class="modern-progress-container mb-2">
+                                        <div class="d-flex justify-content-between mb-1 align-items-end">
+                                            <span class="stat-value">{{ stat.today_docs_val }} <span class="stat-label">files</span></span>
+                                            <span class="badge {% if stat.today_perf >= 100 %}bg-success{% elif stat.today_perf >= 50 %}bg-primary{% else %}bg-danger{% endif %} rounded-pill">
+                                                {{ stat.today_perf|floatformat:1 }}%
+                                            </span>
+                                        </div>
+                                        <div class="modern-progress">
+                                            <div class="progress-bar {% if stat.today_perf >= 100 %}bg-success{% elif stat.today_perf >= 50 %}bg-primary{% else %}bg-danger{% endif %}" style="width: {{ stat.today_perf|floatformat:0 }}%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <i class="bi bi-book text-success small"></i>
+                                            <span class="stat-value fs-6">{{ stat.today_pages_val }} <span class="stat-label">pages</span></span>
+                                        </div>
+                                        <span class="stat-label fw-bold">{{ stat.page_perf|floatformat:1 }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="modern-progress-container mb-2">
+                                        <div class="d-flex justify-content-between mb-1 align-items-end">
+                                            <span class="stat-value">{{ stat.total_docs_val }} <span class="stat-label">done</span></span>
+                                            <span class="fw-bold text-primary">{{ stat.total_perf|floatformat:1 }}%</span>
+                                        </div>
+                                        <div class="modern-progress">
+                                            <div class="progress-bar bg-primary" style="width: {{ stat.total_perf|floatformat:0 }}%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
+                                        <span class="stat-label">Remaining:</span>
+                                        <span class="stat-value text-danger fs-6">{{ stat.remaining_files }} files</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="eta-badge">
+                                        <i class="bi bi-clock-history text-primary me-2"></i>
+                                        <span>{{ stat.expected_finish_days|floatformat:1 }} <span class="fw-normal small">d</span></span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="status-badge {% if stat.today_docs_val %}status-active{% else %}status-inactive{% endif %}">
+                                        <i class="bi bi-circle-fill" style="font-size:0.5rem"></i>
+                                        {% if stat.today_docs_val %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}
                                     </span>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot class="table-dark">
+                        <tfoot class="system-footer">
                             <tr>
-                                <th>-</th>
-                                <th>OVERALL SYSTEM</th>
-                                <th>4800</th>
-                                <th>69929</th>
-                                <th>144000</th>
-                                <th>{{ today_progress }}</th>
-                                <th>{{ total_files }}</th>
+                                <th class="text-center"><i class="bi bi-globe fs-4 text-white-50"></i></th>
                                 <th>
-                                    <div class="d-flex align-items-center text-white">
-                                        <span class="small fw-bold me-2">{{ overall_today_perf|floatformat:1 }}%</span>
-                                        <div class="progress flex-grow-1" style="height: 6px; background-color: rgba(255,255,255,0.2);">
-                                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ overall_today_perf|floatformat:0 }}%"></div>
+                                    <div class="fw-bold fs-6 text-white tracking-wide">OVERALL SYSTEM</div>
+                                    <div class="text-white-50 small fw-normal mt-1">Consolidated Organization Metrics</div>
+                                </th>
+                                <th>
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="text-white small"><i class="bi bi-file-earmark-text text-white-50 me-2"></i>4,800 files/day</div>
+                                        <div class="text-white small"><i class="bi bi-file-break text-white-50 me-2"></i>144,000 pages/day</div>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="modern-progress-container">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-white fw-bold">{{ today_progress }} <span class="text-white-50 fw-normal small">files today</span></span>
+                                            <span class="text-info fw-bold">{{ overall_today_perf|floatformat:1 }}%</span>
+                                        </div>
+                                        <div class="modern-progress" style="background-color: rgba(255,255,255,0.1);">
+                                            <div class="progress-bar bg-info" style="width: {{ overall_today_perf|floatformat:0 }}%"></div>
                                         </div>
                                     </div>
                                 </th>
                                 <th>
-                                    <div class="d-flex align-items-center text-white">
-                                        <span class="small fw-bold me-2">{{ overall_total_perf|floatformat:1 }}%</span>
-                                        <div class="progress flex-grow-1" style="height: 6px; background-color: rgba(255,255,255,0.2);">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ overall_total_perf|floatformat:0 }}%"></div>
+                                    <div class="modern-progress-container">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-white fw-bold">{{ total_files }} <span class="text-white-50 fw-normal small">/ 69,929</span></span>
+                                            <span class="text-success fw-bold">{{ overall_total_perf|floatformat:1 }}%</span>
+                                        </div>
+                                        <div class="modern-progress" style="background-color: rgba(255,255,255,0.1);">
+                                            <div class="progress-bar bg-success" style="width: {{ overall_total_perf|floatformat:0 }}%"></div>
                                         </div>
                                     </div>
                                 </th>
-                                <th>-</th>
-                                <th>-</th>
-                                <th>-</th>
-                                <th>-</th>
+                                <th class="text-center">
+                                    <span class="badge bg-white bg-opacity-10 text-white px-3 py-2 rounded-pill border border-white border-opacity-25">
+                                        System Active
+                                    </span>
+                                </th>
+                                <th></th>
                             </tr>
                         </tfoot>
                     </table>
