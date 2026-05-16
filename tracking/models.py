@@ -47,6 +47,9 @@ class AuditLog(models.Model):
     details = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    isp = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"{self.timestamp} - {self.user.username if self.user else 'System'} - {self.action}"
