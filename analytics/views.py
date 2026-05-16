@@ -39,32 +39,44 @@ def hq_dashboard(request):
     
     branch_stats = Branch.objects.annotate(
         total_docs=Sum('dailyworksubmission__files_digitized_count'),
-        today_docs=Sum('dailyworksubmission__files_digitized_count', filter=Q(dailyworksubmission__date=today))
+        today_docs=Sum('dailyworksubmission__files_digitized_count', filter=Q(dailyworksubmission__date=today)),
+        today_pages=Sum('dailyworksubmission__pages_scanned_count', filter=Q(dailyworksubmission__date=today))
     )
     
-    # Calculate days since start to determine total expected target
-    first_sub = DailyWorkSubmission.objects.order_by('date').first()
-    days_since_start = 1
-    if first_sub:
-        days_since_start = (today - first_sub.date).days + 1
-        if days_since_start < 1: days_since_start = 1
-
     overall_today = 0
     overall_total = 0
-    overall_target_today = 0
-    overall_target_total = 0
+    overall_today_pages = 0
     
     for s in branch_stats:
-        s.today_perf = (s.today_docs / s.daily_target * 100) if s.daily_target > 0 and s.today_docs else 0
-        s.total_perf = (s.total_docs / (s.daily_target * days_since_start) * 100) if s.daily_target > 0 and s.total_docs else 0
+        s.fixed_daily_target = 400
+        s.fixed_page_target = 1200
         
-        overall_today += s.today_docs or 0
-        overall_total += s.total_docs or 0
-        overall_target_today += s.daily_target or 0
-        overall_target_total += (s.daily_target * days_since_start) or 0
+        s.today_docs_val = s.today_docs or 0
+        s.total_docs_val = s.total_docs or 0
+        s.today_pages_val = s.today_pages or 0
         
-    overall_today_perf = (overall_today / overall_target_today * 100) if overall_target_today > 0 else 0
-    overall_total_perf = (overall_total / overall_target_total * 100) if overall_target_total > 0 else 0
+        s.today_perf = (s.today_docs_val / s.fixed_daily_target) * 100
+        s.total_perf = (s.total_docs_val / s.total_target * 100) if s.total_target > 0 else 0
+        s.page_perf = (s.today_pages_val / s.fixed_page_target) * 100
+        
+        s.remaining_files = s.total_target - s.total_docs_val
+        if s.remaining_files < 0:
+            s.remaining_files = 0
+            
+        s.expected_finish_days = s.remaining_files / s.fixed_daily_target
+        
+        overall_today += s.today_docs_val
+        overall_total += s.total_docs_val
+        overall_today_pages += s.today_pages_val
+
+    # Branch Rank by Overall Performance
+    branch_stats = list(branch_stats)
+    branch_stats.sort(key=lambda x: x.total_perf, reverse=True)
+    for idx, s in enumerate(branch_stats, 1):
+        s.rank = idx
+        
+    overall_today_perf = (overall_today / 4800) * 100
+    overall_total_perf = (overall_total / 69929) * 100
 
     # Daily Trend (Last 7 Days)
     end_date = today
