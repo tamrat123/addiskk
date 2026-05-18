@@ -551,10 +551,22 @@ def export_pdf(request):
     elements.append(Paragraph("የቅርንጫፎች አጠቃላይ አፈፃፀም ማጠቃለያ", summary_header))
     
     data = [['የቅርንጫፍ ስም', 'ስካን የተደረጉ ፋይል ብዛት', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ', 'አፈፃፀም %']]
-    branch_stats = branches.annotate(
+    branch_stats = list(branches.annotate(
         total_files=Sum('dailyworksubmission__files_digitized_count', filter=q_filter),
         total_pages=Sum('dailyworksubmission__pages_scanned_count', filter=q_filter)
-    )
+    ))
+    
+    # Pre-calculate performance percentage for sorting
+    for stat in branch_stats:
+        t_files = stat.total_files or 0
+        if start_date or end_date:
+            period_target = stat.daily_target * days
+            stat.computed_perf = (t_files / period_target * 100) if period_target > 0 else 0
+        else:
+            stat.computed_perf = (t_files / stat.total_target * 100) if stat.total_target > 0 else 0
+
+    # Sort branch_stats by computed_perf in descending order (highest performance first)
+    branch_stats.sort(key=lambda s: s.computed_perf, reverse=True)
     
     overall_files = 0
     overall_pages = 0
@@ -569,11 +581,7 @@ def export_pdf(request):
         overall_daily_target += stat.daily_target
         overall_total_target += stat.total_target
 
-        if start_date or end_date:
-            period_target = stat.daily_target * days
-            perf = (t_files / period_target * 100) if period_target > 0 else 0
-        else:
-            perf = (t_files / stat.total_target * 100) if stat.total_target > 0 else 0
+        perf = stat.computed_perf
 
         data.append([
             stat.name,
