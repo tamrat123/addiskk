@@ -6,52 +6,1033 @@
 {% block header_title %}{% trans "Branch" %} Performance Overview{% endblock %}
 
 {% block content %}
-<div class="row g-4">
-    {% for branch in branches %}
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h5 class="card-title mb-1">{{ branch.name }}</h5>
-                        <p class="text-muted small mb-0"><i class="bi bi-geo-alt"></i> {{ branch.location }}</p>
-                    </div>
-                    <span class="badge bg-{% if branch.status == 'Active' %}success{% else %}warning{% endif %}">
-                        {{ branch.status }}
+<style>
+    /* Premium Glassmorphism styling system */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+        border-radius: 1.25rem;
+    }
+
+    .kpi-card {
+        border-radius: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.8) 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(79, 70, 229, 0.08);
+        border-color: rgba(79, 70, 229, 0.3);
+    }
+
+    .kpi-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .bg-primary-light {
+        background: rgba(79, 70, 229, 0.1);
+        color: #4F46E5;
+    }
+
+    .bg-success-light {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .bg-warning-light {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+
+    .bg-info-light {
+        background: rgba(6, 182, 212, 0.1);
+        color: #06B6D4;
+    }
+
+    /* Custom premium card design for branches */
+    .branch-card {
+        border-radius: 1.5rem;
+        background: white;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .branch-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        border-color: rgba(79, 70, 229, 0.2);
+    }
+
+    /* Visual top-edge glow ribbon based on performance tier */
+    .branch-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .branch-card.outstanding::before {
+        background: linear-gradient(90deg, #F59E0B, #10B981);
+    }
+    .branch-card.high-performer::before {
+        background: linear-gradient(90deg, #10B981, #06B6D4);
+    }
+    .branch-card.on-track::before {
+        background: linear-gradient(90deg, #4F46E5, #6366F1);
+    }
+    .branch-card.needs-support::before {
+        background: linear-gradient(90deg, #EF4444, #F59E0B);
+    }
+
+    /* Badge designs */
+    .achievement-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.3rem 0.75rem;
+        border-radius: 2rem;
+        letter-spacing: 0.3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        text-transform: uppercase;
+    }
+
+    .badge-outstanding {
+        background: rgba(245, 158, 11, 0.1);
+        color: #D97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.05);
+    }
+
+    .badge-high-performer {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .badge-on-track {
+        background: rgba(79, 70, 229, 0.1);
+        color: #4F46E5;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+
+    .badge-needs-support {
+        background: rgba(239, 68, 68, 0.1);
+        color: #DC2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* Status Indicator Dot */
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-indicator.active {
+        background-color: #10B981;
+        box-shadow: 0 0 8px #10B981;
+    }
+    .status-indicator.pending {
+        background-color: #F59E0B;
+        box-shadow: 0 0 8px #F59E0B;
+    }
+    .status-indicator.inactive {
+        background-color: #94A3B8;
+    }
+
+    /* SVG circular gauge */
+    .gauge-container {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gauge-svg {
+        transform: rotate(-90deg);
+        width: 100px;
+        height: 100px;
+    }
+
+    .gauge-bg {
+        fill: none;
+        stroke: #f1f5f9;
+        stroke-width: 8;
+    }
+
+    .gauge-progress {
+        fill: none;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        stroke-dasharray: 238.76;
+        stroke-dashoffset: 238.76;
+    }
+
+    /* Color configurations for progress gauges */
+    .branch-card.outstanding .gauge-progress { stroke: url(#grad-gold); }
+    .branch-card.high-performer .gauge-progress { stroke: url(#grad-green); }
+    .branch-card.on-track .gauge-progress { stroke: url(#grad-blue); }
+    .branch-card.needs-support .gauge-progress { stroke: url(#grad-red); }
+
+    .gauge-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: baseline;
+    }
+
+    .gauge-text .percent-sign {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-left: 1px;
+    }
+
+    /* Control bar styling */
+    .control-panel {
+        border-radius: 1.25rem;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input-group {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 2rem;
+        padding: 0.25rem 0.5rem 0.25rem 1.25rem;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .search-input-group:focus-within {
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .search-input {
+        border: none;
+        outline: none;
+        background: transparent;
+        padding: 0.5rem 0;
+        font-size: 0.95rem;
+        width: 100%;
+        color: #1e293b;
+    }
+
+    .search-icon {
+        color: #94a3b8;
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+    }
+
+    .filter-select {
+        border-radius: 2rem;
+        padding: 0.55rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .filter-select:focus {
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        outline: none;
+    }
+
+    .status-pills {
+        display: flex;
+        gap: 0.35rem;
+        background: #f1f5f9;
+        padding: 0.35rem;
+        border-radius: 2rem;
+    }
+
+    .status-pill-btn {
+        border: none;
+        outline: none;
+        background: transparent;
+        padding: 0.45rem 1.25rem;
+        border-radius: 2rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .status-pill-btn.active {
+        background: white;
+        color: #4F46E5;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* View switcher styling */
+    .view-switcher-group {
+        display: flex;
+        background: #f1f5f9;
+        padding: 0.35rem;
+        border-radius: 2rem;
+    }
+
+    .view-btn {
+        border: none;
+        outline: none;
+        background: transparent;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .view-btn.active {
+        background: white;
+        color: #4F46E5;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* Table layout styling */
+    .table-view-container {
+        background: white;
+        border-radius: 1.5rem;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    }
+
+    .premium-table {
+        margin-bottom: 0;
+    }
+
+    .premium-table th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1.1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .premium-table td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        font-size: 0.92rem;
+    }
+
+    .premium-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .premium-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .premium-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .progress-thin {
+        height: 6px;
+        border-radius: 1rem;
+        background-color: #f1f5f9;
+    }
+
+    /* Empty state */
+    .empty-state {
+        border-radius: 1.5rem;
+        border: 2px dashed #e2e8f0;
+        background-color: #f8fafc;
+    }
+
+    /* Utility custom styling card inner */
+    .stat-card-premium {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    .stat-card-premium:hover {
+        background: #ffffff;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border-color: #cbd5e1;
+    }
+</style>
+
+<!-- Hidden SVG definitions for gauge gradients -->
+<svg style="width:0; height:0; position:absolute;" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="grad-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F59E0B" />
+            <stop offset="100%" stop-color="#D97706" />
+        </linearGradient>
+        <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#34D399" />
+            <stop offset="100%" stop-color="#059669" />
+        </linearGradient>
+        <linearGradient id="grad-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366F1" />
+            <stop offset="100%" stop-color="#4F46E5" />
+        </linearGradient>
+        <linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F87171" />
+            <stop offset="100%" stop-color="#EF4444" />
+        </linearGradient>
+    </defs>
+</svg>
+
+<div class="container-fluid px-0">
+    <!-- Header Block -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1 text-dark fw-bold">{% trans "Branches Overview" %}</h4>
+                <p class="text-muted small mb-0">{% trans "Track, search and monitor digitized status across all regional offices" %}</p>
+            </div>
+            {% if user.role == 'HQ_ADMIN' %}
+            <div class="d-flex gap-2">
+                <a href="{% url 'add_branch' %}" class="btn btn-primary premium-hover shadow-sm rounded-pill px-4">
+                    <i class="bi bi-plus-lg me-2"></i>{% trans "Add New Branch" %}
+                </a>
+                <a href="{% url 'admin_panel' %}" class="btn btn-outline-primary premium-hover shadow-sm rounded-pill px-4">
+                    <i class="bi bi-gear-fill me-2"></i>{% trans "Admin Panel" %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Aggregated KPIs Panel -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card h-100 kpi-card p-4">
+                <div class="kpi-icon-wrapper bg-primary-light">
+                    <i class="bi bi-buildings"></i>
+                </div>
+                <span class="text-muted small fw-bold text-uppercase">{% trans "Active Branches" %}</span>
+                <h3 class="fw-extrabold text-dark mt-2 mb-0">{{ active_branches_count }}<span class="text-muted fs-6 font-normal"> / {{ total_branches_count }}</span></h3>
+                <div class="mt-3">
+                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success small">
+                        <i class="status-indicator active me-1"></i> {% trans "Operational" %}
                     </span>
                 </div>
-                
-                <div class="row g-2 mb-4">
-                    <div class="col-6">
-                        <div class="bg-light p-2 rounded text-center">
-                            <div class="small text-muted">Digitized</div>
-                            <div class="fw-bold text-primary">{{ branch.total_files|default:"0" }}</div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="bg-light p-2 rounded text-center">
-                            <div class="small text-muted">Pages</div>
-                            <div class="fw-bold text-success">{{ branch.total_pages|default:"0" }}</div>
-                        </div>
-                    </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 kpi-card p-4">
+                <div class="kpi-icon-wrapper bg-success-light">
+                    <i class="bi bi-file-earmark-text"></i>
                 </div>
-
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>Staff: {{ branch.operator_count }}</span>
-                        <span>Targets: {{ branch.daily_target }} F / {{ branch.daily_page_target }} P</span>
-                    </div>
-                    <div class="progress" style="height: 6px;">
-                        <div class="progress-bar" style="width: 100%"></div>
-                    </div>
+                <span class="text-muted small fw-bold text-uppercase">{% trans "Total Digitized" %}</span>
+                <h3 class="fw-extrabold text-dark mt-2 mb-0">{{ total_files_sum|default:"0" }}</h3>
+                <div class="mt-3">
+                    <span class="text-muted small">{% trans "Files processed" %}</span>
                 </div>
-
-                <div class="d-grid">
-                    <a href="{% url 'edit_branch' branch.pk %}" class="btn btn-outline-primary btn-sm">Manage {% trans "Branch" %}</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 kpi-card p-4">
+                <div class="kpi-icon-wrapper bg-info-light">
+                    <i class="bi bi-journal-richtext"></i>
+                </div>
+                <span class="text-muted small fw-bold text-uppercase">{% trans "Total Pages" %}</span>
+                <h3 class="fw-extrabold text-dark mt-2 mb-0">{{ total_pages_sum|default:"0" }}</h3>
+                <div class="mt-3">
+                    <span class="text-muted small">{% trans "Pages scanned" %}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 kpi-card p-4">
+                <div class="kpi-icon-wrapper bg-warning-light">
+                    <i class="bi bi-compass"></i>
+                </div>
+                <span class="text-muted small fw-bold text-uppercase">{% trans "Overall Completion" %}</span>
+                <h3 class="fw-extrabold text-dark mt-2 mb-0">{{ overall_performance_pct|floatformat:1 }}%</h3>
+                <div class="mt-3">
+                    <div class="progress progress-thin">
+                        <div class="progress-bar bg-warning rounded-pill" style="width: {{ overall_performance_pct|floatformat:0 }}%"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endfor %}
+
+    <!-- Control bar (Search, Filter, Sort & Layout Switcher) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card glass-panel control-panel">
+                <div class="row g-3 align-items-center">
+                    <!-- Search Input -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="search-input-group">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" id="branchSearch" class="search-input" placeholder="{% trans "Search by name or location..." %}">
+                        </div>
+                    </div>
+
+                    <!-- Region Selector -->
+                    <div class="col-lg-2 col-md-3">
+                        <select id="regionFilter" class="form-select filter-select">
+                            <option value="">{% trans "All Regions" %}</option>
+                            <!-- Dynamically populated from JS -->
+                        </select>
+                    </div>
+
+                    <!-- Sort Selector -->
+                    <div class="col-lg-2 col-md-3">
+                        <select id="sortOption" class="form-select filter-select">
+                            <option value="name-asc">{% trans "Sort: Name A-Z" %}</option>
+                            <option value="perf-desc">{% trans "Sort: Perf (High to Low)" %}</option>
+                            <option value="perf-asc">{% trans "Sort: Perf (Low to High)" %}</option>
+                            <option value="files-desc">{% trans "Sort: Digitized (Desc)" %}</option>
+                            <option value="pages-desc">{% trans "Sort: Pages (Desc)" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Status Pills -->
+                    <div class="col-lg-3 col-md-8 d-flex justify-content-lg-center">
+                        <div class="status-pills" id="statusPillContainer">
+                            <button class="status-pill-btn active" data-status="ALL">{% trans "All" %}</button>
+                            <button class="status-pill-btn" data-status="Active">{% trans "Active" %}</button>
+                            <button class="status-pill-btn" data-status="Pending">{% trans "Pending" %}</button>
+                            <button class="status-pill-btn" data-status="Inactive">{% trans "Inactive" %}</button>
+                        </div>
+                    </div>
+
+                    <!-- Grid vs List View -->
+                    <div class="col-lg-1 col-md-4 d-flex justify-content-end">
+                        <div class="view-switcher-group">
+                            <button id="viewCardBtn" class="view-btn active" title="Grid View">
+                                <i class="bi bi-grid-fill"></i>
+                            </button>
+                            <button id="viewListBtn" class="view-btn" title="Table View">
+                                <i class="bi bi-list-task"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards Layout Container -->
+    <div class="row g-4 mb-5" id="branchGridContainer">
+        {% for branch in branches %}
+        <div class="col-xl-4 col-md-6 branch-item" 
+             data-name="{{ branch.name|lower }}" 
+             data-location="{{ branch.region|default:branch.location|lower }}"
+             data-region="{{ branch.region|default:branch.location }}"
+             data-status="{{ branch.status }}" 
+             data-perf="{{ branch.perf_percentage|floatformat:1 }}" 
+             data-files="{{ branch.total_files|default:0 }}" 
+             data-pages="{{ branch.total_pages|default:0 }}"
+             data-staff="{{ branch.operator_count }}">
+            
+            {% with perf=branch.perf_percentage %}
+            <div class="card h-100 branch-card {% if perf >= 95 %}outstanding{% elif perf >= 75 %}high-performer{% elif perf >= 50 %}on-track{% else %}needs-support{% endif %}">
+                <div class="card-body p-4 d-flex flex-column">
+                    <!-- Title and Status row -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="pe-2">
+                            <h5 class="fw-extrabold text-dark mb-1 branch-title-text">{{ branch.name }}</h5>
+                            <span class="text-muted small"><i class="bi bi-geo-alt-fill text-primary me-1"></i><span class="branch-region-text">{{ branch.region|default:branch.location }}</span></span>
+                        </div>
+                        <div class="d-flex flex-column align-items-end gap-1">
+                            <span class="badge premium-badge bg-{% if branch.status == 'Active' %}success{% elif branch.status == 'Pending' %}warning{% else %}secondary{% endif %} bg-opacity-10 text-{% if branch.status == 'Active' %}success{% elif branch.status == 'Pending' %}warning{% else %}secondary{% endif %}">
+                                <i class="status-indicator {% if branch.status == 'Active' %}active{% elif branch.status == 'Pending' %}pending{% else %}inactive{% endif %} me-1"></i>{{ branch.status }}
+                            </span>
+                            <span class="achievement-badge {% if perf >= 95 %}badge-outstanding{% elif perf >= 75 %}badge-high-performer{% elif perf >= 50 %}badge-on-track{% else %}badge-needs-support{% endif %} mt-1">
+                                {% if perf >= 95 %}
+                                    <i class="bi bi-trophy-fill"></i> {% trans "Outstanding" %}
+                                {% elif perf >= 75 %}
+                                    <i class="bi bi-lightning-charge-fill"></i> {% trans "High" %}
+                                {% elif perf >= 50 %}
+                                    <i class="bi bi-graph-up-arrow"></i> {% trans "On Track" %}
+                                {% else %}
+                                    <i class="bi bi-exclamation-triangle-fill"></i> {% trans "Support" %}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Visual Progress & Gauge row -->
+                    <div class="row align-items-center mb-4">
+                        <div class="col-7">
+                            <div class="stat-card-premium p-3 h-100 text-center mb-2">
+                                <div class="small text-muted fw-bold mb-1">{% trans "Digitized" %}</div>
+                                <div class="fs-4 fw-extrabold text-primary">{{ branch.total_files|default:"0" }}</div>
+                            </div>
+                            <div class="stat-card-premium p-3 h-100 text-center">
+                                <div class="small text-muted fw-bold mb-1">{% trans "Pages" %}</div>
+                                <div class="fs-4 fw-extrabold text-success">{{ branch.total_pages|default:"0" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-5 d-flex justify-content-center">
+                            <div class="gauge-container" data-percent="{{ perf|floatformat:0 }}">
+                                <svg class="gauge-svg">
+                                    <circle class="gauge-bg" cx="50" cy="50" r="38"></circle>
+                                    <circle class="gauge-progress" cx="50" cy="50" r="38"></circle>
+                                </svg>
+                                <div class="gauge-text">
+                                    {{ perf|floatformat:0 }}<span class="percent-sign">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metadata indicators -->
+                    <div class="mb-4 mt-auto">
+                        <div class="d-flex justify-content-between small fw-bold mb-2">
+                            <span class="text-muted"><i class="bi bi-people-fill me-1"></i>{% trans "Staff" %}: {{ branch.operator_count }}</span>
+                            <span class="text-muted"><i class="bi bi-bullseye me-1"></i>{{ branch.daily_target }} F / {{ branch.daily_page_target }} P</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small text-muted">
+                            <span>{% trans "Est. Days Left" %}:</span>
+                            <span class="fw-bold text-dark">
+                                {% if branch.expected_finish_days > 100 %}
+                                    > 100 {% trans "days" %}
+                                {% else %}
+                                    {{ branch.expected_finish_days|floatformat:1 }} {% trans "days" %}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    {% if user.role == 'HQ_ADMIN' %}
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'edit_branch' branch.pk %}" class="btn btn-outline-primary rounded-pill fw-bold">
+                            <i class="bi bi-pencil-square me-2"></i>{% trans "Manage Branch" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 empty-state" id="noBranchesCard">
+            <div class="text-muted my-4">
+                <i class="bi bi-building fs-1 mb-3 d-block opacity-50"></i>
+                <h5 class="fw-bold">{% trans "No branches found" %}</h5>
+                <p>{% trans "There are currently no branches registered in the system." %}</p>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Empty Filter Results State Grid -->
+        <div class="col-12 text-center py-5 empty-state d-none" id="emptyFilterGrid">
+            <div class="text-muted my-4">
+                <i class="bi bi-search fs-1 mb-3 d-block opacity-50"></i>
+                <h5 class="fw-bold">{% trans "No matching branches" %}</h5>
+                <p>{% trans "Adjust your search keywords, status filters or region selection." %}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Layout Container (D-NONE by default) -->
+    <div class="row mb-5 d-none" id="branchTableContainer">
+        <div class="col-12">
+            <div class="table-view-container">
+                <div class="table-responsive">
+                    <table class="table premium-table align-middle" id="branchesTable">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Branch Name" %}</th>
+                                <th>{% trans "Location/Region" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Digitized Files" %}</th>
+                                <th>{% trans "Scanned Pages" %}</th>
+                                <th>{% trans "Target Completion" %}</th>
+                                <th>{% trans "Staff Size" %}</th>
+                                <th>{% trans "Expected Days" %}</th>
+                                {% if user.role == 'HQ_ADMIN' %}
+                                <th class="text-end">{% trans "Actions" %}</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for branch in branches %}
+                            <tr class="branch-tr-item" 
+                                data-name="{{ branch.name|lower }}" 
+                                data-location="{{ branch.region|default:branch.location|lower }}"
+                                data-region="{{ branch.region|default:branch.location }}"
+                                data-status="{{ branch.status }}" 
+                                data-perf="{{ branch.perf_percentage|floatformat:1 }}" 
+                                data-files="{{ branch.total_files|default:0 }}" 
+                                data-pages="{{ branch.total_pages|default:0 }}"
+                                data-staff="{{ branch.operator_count }}">
+                                <td>
+                                    <span class="fw-bold text-dark">{{ branch.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted"><i class="bi bi-geo-alt-fill text-primary-light me-1"></i>{{ branch.region|default:branch.location }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge premium-badge bg-{% if branch.status == 'Active' %}success{% elif branch.status == 'Pending' %}warning{% else %}secondary{% endif %} bg-opacity-10 text-{% if branch.status == 'Active' %}success{% elif branch.status == 'Pending' %}warning{% else %}secondary{% endif %} py-1 px-3">
+                                        <i class="status-indicator {% if branch.status == 'Active' %}active{% elif branch.status == 'Pending' %}pending{% else %}inactive{% endif %} me-1"></i>{{ branch.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ branch.total_files|default:"0" }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success">{{ branch.total_pages|default:"0" }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold smaller">{{ branch.perf_percentage|floatformat:0 }}%</span>
+                                        <div class="progress progress-thin flex-grow-1" style="width: 80px;">
+                                            <div class="progress-bar {% if branch.perf_percentage >= 95 %}bg-success{% elif branch.perf_percentage >= 50 %}bg-primary{% else %}bg-danger{% endif %}" 
+                                                 style="width: {{ branch.perf_percentage|floatformat:0 }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-muted"><i class="bi bi-people-fill me-1"></i>{{ branch.operator_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-medium">
+                                        {% if branch.expected_finish_days > 100 %}
+                                            > 100 {% trans "days" %}
+                                        {% else %}
+                                            {{ branch.expected_finish_days|floatformat:1 }} {% trans "days" %}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                {% if user.role == 'HQ_ADMIN' %}
+                                <td class="text-end">
+                                    <a href="{% url 'edit_branch' branch.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1">
+                                        <i class="bi bi-pencil-square me-1"></i>{% trans "Manage" %}
+                                    </a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty Filter Results State Table -->
+        <div class="col-12 text-center py-5 empty-state d-none" id="emptyFilterTable">
+            <div class="text-muted my-4">
+                <i class="bi bi-search fs-1 mb-3 d-block opacity-50"></i>
+                <h5 class="fw-bold">{% trans "No matching branches" %}</h5>
+                <p>{% trans "Adjust your search keywords, status filters or region selection." %}</p>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function initBranchesDashboard() {
+        // SVG circle gauge animation initialization
+        const circumference = 238.76;
+        
+        function animateGauges() {
+            const containers = document.querySelectorAll(".gauge-container");
+            containers.forEach(container => {
+                const percent = parseFloat(container.dataset.percent) || 0;
+                const cappedPercent = Math.min(100, Math.max(0, percent));
+                const offset = circumference - (cappedPercent / 100) * circumference;
+                const progressCircle = container.querySelector(".gauge-progress");
+                if (progressCircle) {
+                    setTimeout(() => {
+                        progressCircle.style.strokeDashoffset = offset;
+                    }, 50);
+                }
+            });
+        }
+        animateGauges();
+
+        // Dynamically extract unique regions/locations to populate the select options
+        const regionSelect = document.getElementById("regionFilter");
+        if (regionSelect) {
+            const regionSet = new Set();
+            document.querySelectorAll(".branch-item").forEach(item => {
+                const region = item.getAttribute("data-region");
+                if (region && region.trim() !== "") {
+                    regionSet.add(region);
+                }
+            });
+
+            regionSet.forEach(region => {
+                const option = document.createElement("option");
+                option.value = region;
+                option.textContent = region;
+                regionSelect.appendChild(option);
+            });
+        }
+
+        // State variables for filter/search/sort state
+        let searchKeyword = "";
+        let selectedRegion = "";
+        let selectedStatus = "ALL";
+        let selectedSort = "name-asc";
+        let currentLayout = localStorage.getItem("branchesLayout") || "GRID"; // GRID or TABLE
+
+        // DOM elements cache
+        const searchInput = document.getElementById("branchSearch");
+        const sortSelect = document.getElementById("sortOption");
+        const statusButtons = document.querySelectorAll(".status-pill-btn");
+        const cardViewBtn = document.getElementById("viewCardBtn");
+        const listViewBtn = document.getElementById("viewListBtn");
+        const gridContainer = document.getElementById("branchGridContainer");
+        const tableContainer = document.getElementById("branchTableContainer");
+        
+        // Grid elements
+        const branchCards = Array.from(document.querySelectorAll(".branch-item"));
+        const noBranchesCard = document.getElementById("noBranchesCard");
+        const emptyFilterGrid = document.getElementById("emptyFilterGrid");
+        
+        // Table elements
+        const tableBody = document.querySelector("#branchesTable tbody");
+        const branchRows = Array.from(document.querySelectorAll(".branch-tr-item"));
+        const emptyFilterTable = document.getElementById("emptyFilterTable");
+
+        // Set layout initially
+        applyLayout(currentLayout);
+
+        // Event listener - Search input
+        if (searchInput) {
+            searchInput.addEventListener("input", function(e) {
+                searchKeyword = e.target.value.toLowerCase().trim();
+                applyFilterAndSort();
+            });
+        }
+
+        // Event listener - Region Select
+        if (regionSelect) {
+            regionSelect.addEventListener("change", function(e) {
+                selectedRegion = e.target.value;
+                applyFilterAndSort();
+            });
+        }
+
+        // Event listener - Sort Selector
+        if (sortSelect) {
+            sortSelect.addEventListener("change", function(e) {
+                selectedSort = e.target.value;
+                applyFilterAndSort();
+            });
+        }
+
+        // Event listener - Status pills
+        statusButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                statusButtons.forEach(btn => btn.classList.remove("active"));
+                this.classList.add("active");
+                selectedStatus = this.getAttribute("data-status");
+                applyFilterAndSort();
+            });
+        });
+
+        // Layout switches
+        if (cardViewBtn) {
+            cardViewBtn.addEventListener("click", function() {
+                applyLayout("GRID");
+            });
+        }
+
+        if (listViewBtn) {
+            listViewBtn.addEventListener("click", function() {
+                applyLayout("TABLE");
+            });
+        }
+
+        function applyLayout(layout) {
+            currentLayout = layout;
+            localStorage.setItem("branchesLayout", layout);
+            
+            if (layout === "GRID") {
+                if (cardViewBtn) cardViewBtn.classList.add("active");
+                if (listViewBtn) listViewBtn.classList.remove("active");
+                if (gridContainer) gridContainer.classList.remove("d-none");
+                if (tableContainer) tableContainer.classList.add("d-none");
+            } else {
+                if (cardViewBtn) cardViewBtn.classList.remove("active");
+                if (listViewBtn) listViewBtn.classList.add("active");
+                if (gridContainer) gridContainer.classList.add("d-none");
+                if (tableContainer) tableContainer.classList.remove("d-none");
+            }
+            applyFilterAndSort();
+        }
+
+        // Search, filter, and sort aggregate engine
+        function applyFilterAndSort() {
+            let visibleCount = 0;
+            
+            // Grid layout filtering
+            branchCards.forEach(card => {
+                const name = (card.getAttribute("data-name") || "").toLowerCase();
+                const location = (card.getAttribute("data-location") || "").toLowerCase();
+                const region = card.getAttribute("data-region") || "";
+                const status = card.getAttribute("data-status") || "";
+                
+                // Matches conditions
+                const matchSearch = name.includes(searchKeyword) || location.includes(searchKeyword);
+                const matchRegion = selectedRegion === "" || region === selectedRegion;
+                const matchStatus = selectedStatus === "ALL" || status === selectedStatus;
+                
+                if (matchSearch && matchRegion && matchStatus) {
+                    card.classList.remove("d-none");
+                    visibleCount++;
+                } else {
+                    card.classList.add("d-none");
+                }
+            });
+
+            // Adjust grid empty states
+            if (visibleCount === 0) {
+                if (branchCards.length > 0) {
+                    if (emptyFilterGrid) emptyFilterGrid.classList.remove("d-none");
+                    if (noBranchesCard) noBranchesCard.classList.add("d-none");
+                }
+            } else {
+                if (emptyFilterGrid) emptyFilterGrid.classList.add("d-none");
+                if (noBranchesCard) noBranchesCard.classList.add("d-none");
+            }
+
+            // Table layout filtering
+            let tableVisibleCount = 0;
+            branchRows.forEach(row => {
+                const name = (row.getAttribute("data-name") || "").toLowerCase();
+                const location = (row.getAttribute("data-location") || "").toLowerCase();
+                const region = row.getAttribute("data-region") || "";
+                const status = row.getAttribute("data-status") || "";
+                
+                const matchSearch = name.includes(searchKeyword) || location.includes(searchKeyword);
+                const matchRegion = selectedRegion === "" || region === selectedRegion;
+                const matchStatus = selectedStatus === "ALL" || status === selectedStatus;
+                
+                if (matchSearch && matchRegion && matchStatus) {
+                    row.classList.remove("d-none");
+                    tableVisibleCount++;
+                } else {
+                    row.classList.add("d-none");
+                }
+            });
+
+            // Adjust table empty states
+            if (tableVisibleCount === 0) {
+                if (emptyFilterTable) emptyFilterTable.classList.remove("d-none");
+            } else {
+                if (emptyFilterTable) emptyFilterTable.classList.add("d-none");
+            }
+
+            // Execute sorting
+            sortElements();
+        }
+
+        // Sorting execution
+        function sortElements() {
+            // Sort cards in Grid view
+            const visibleCards = branchCards.filter(card => !card.classList.contains("d-none"));
+            visibleCards.sort((a, b) => compareValues(a, b));
+            
+            // Re-append cards to DOM to show correct sort
+            if (gridContainer) {
+                visibleCards.forEach(card => gridContainer.appendChild(card));
+            }
+            
+            // Sort rows in Table view
+            const visibleRows = branchRows.filter(row => !row.classList.contains("d-none"));
+            visibleRows.sort((a, b) => compareValues(a, b));
+            
+            // Re-append table rows to DOM
+            if (tableBody) {
+                visibleRows.forEach(row => tableBody.appendChild(row));
+            }
+        }
+
+        // Standard comparison engine
+        function compareValues(a, b) {
+            let valA, valB;
+            
+            switch (selectedSort) {
+                case "name-asc":
+                    valA = (a.getAttribute("data-name") || "").toLowerCase();
+                    valB = (b.getAttribute("data-name") || "").toLowerCase();
+                    return valA.localeCompare(valB);
+                    
+                case "perf-desc":
+                    valA = parseFloat(a.getAttribute("data-perf")) || 0;
+                    valB = parseFloat(b.getAttribute("data-perf")) || 0;
+                    return valB - valA;
+                    
+                case "perf-asc":
+                    valA = parseFloat(a.getAttribute("data-perf")) || 0;
+                    valB = parseFloat(b.getAttribute("data-perf")) || 0;
+                    return valA - valB;
+                    
+                case "files-desc":
+                    valA = parseInt(a.getAttribute("data-files")) || 0;
+                    valB = parseInt(b.getAttribute("data-files")) || 0;
+                    return valB - valA;
+                    
+                case "pages-desc":
+                    valA = parseInt(a.getAttribute("data-pages")) || 0;
+                    valB = parseInt(b.getAttribute("data-pages")) || 0;
+                    return valB - valA;
+                    
+                default:
+                    return 0;
+            }
+        }
+    }
+
+    // Run dashboard initialization safely
+    if (document.readyState === "interactive" || document.readyState === "complete") {
+        initBranchesDashboard();
+    } else {
+        document.addEventListener("DOMContentLoaded", initBranchesDashboard);
+    }
+</script>
 {% endblock %}

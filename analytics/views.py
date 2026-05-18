@@ -55,15 +55,15 @@ def hq_dashboard(request):
         s.total_docs_val = s.total_docs or 0
         s.today_pages_val = s.today_pages or 0
         
-        s.today_perf = (s.today_docs_val / s.fixed_daily_target) * 100
+        s.today_perf = (s.today_docs_val / s.fixed_daily_target * 100) if s.fixed_daily_target > 0 else 0
         s.total_perf = (s.total_docs_val / s.total_target * 100) if s.total_target > 0 else 0
-        s.page_perf = (s.today_pages_val / s.fixed_page_target) * 100
+        s.page_perf = (s.today_pages_val / s.fixed_page_target * 100) if s.fixed_page_target > 0 else 0
         
         s.remaining_files = s.total_target - s.total_docs_val
         if s.remaining_files < 0:
             s.remaining_files = 0
             
-        s.expected_finish_days = s.remaining_files / s.fixed_daily_target
+        s.expected_finish_days = (s.remaining_files / s.fixed_daily_target) if s.fixed_daily_target > 0 else 0
         
         overall_today += s.today_docs_val
         overall_total += s.total_docs_val
@@ -225,7 +225,37 @@ def branch_list_view(request):
         total_pages=Sum('dailyworksubmission__pages_scanned_count'),
         operator_count=Count('users', filter=Q(users__role='OPERATOR'))
     )
-    return render(request, 'analytics/branch_list.html', {'branches': branches})
+    
+    total_branches_count = branches.count()
+    active_branches_count = 0
+    total_files_sum = 0
+    total_pages_sum = 0
+    total_target_sum = 0
+    
+    for b in branches:
+        tf = b.total_files or 0
+        tp = b.total_pages or 0
+        b.perf_percentage = (tf / b.total_target * 100) if b.total_target > 0 else 0
+        b.remaining_files = max(0, b.total_target - tf)
+        b.expected_finish_days = (b.remaining_files / b.daily_target) if b.daily_target > 0 else 0
+        
+        if b.status == 'Active':
+            active_branches_count += 1
+        total_files_sum += tf
+        total_pages_sum += tp
+        total_target_sum += b.total_target
+        
+    overall_performance_pct = (total_files_sum / total_target_sum * 100) if total_target_sum > 0 else 0
+
+    context = {
+        'branches': branches,
+        'total_branches_count': total_branches_count,
+        'active_branches_count': active_branches_count,
+        'total_files_sum': total_files_sum,
+        'total_pages_sum': total_pages_sum,
+        'overall_performance_pct': overall_performance_pct,
+    }
+    return render(request, 'analytics/branch_list.html', context)
 
 @login_required
 @login_required
