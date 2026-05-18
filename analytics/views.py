@@ -366,7 +366,7 @@ def export_excel(request):
     workbook = xlsxwriter.Workbook(output)
     worksheet = workbook.add_worksheet('Branch Statistics')
     header_fmt = workbook.add_format({'bold': True, 'bg_color': '#4F46E5', 'font_color': 'white'})
-    headers = ['የቅርንጫፍ ስም', 'ዲጂታይዝ የተደረጉ', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ']
+    headers = ['የቅርንጫፍ ስም', 'ስካን የተደረጉ ፋይል ብዛት', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ']
     for col, header in enumerate(headers):
         worksheet.write(0, col, header, header_fmt)
     
@@ -496,7 +496,7 @@ def export_pdf(request):
     summary_header = ParagraphStyle('SummaryHeader', parent=subtitle_style, spaceBefore=12)
     elements.append(Paragraph("የቅርንጫፎች አጠቃላይ አፈፃፀም ማጠቃለያ", summary_header))
     
-    data = [['የቅርንጫፍ ስም', 'ዲጂታይዝ የተደረጉ', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ', 'አፈፃፀም %']]
+    data = [['የቅርንጫፍ ስም', 'ስካን የተደረጉ ፋይል ብዛት', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ', 'አፈፃፀም %']]
     branch_stats = branches.annotate(
         total_files=Sum('dailyworksubmission__files_digitized_count', filter=q_filter),
         total_pages=Sum('dailyworksubmission__pages_scanned_count', filter=q_filter)
