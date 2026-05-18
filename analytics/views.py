@@ -48,8 +48,8 @@ def hq_dashboard(request):
     overall_today_pages = 0
     
     for s in branch_stats:
-        s.fixed_daily_target = 400
-        s.fixed_page_target = 12000
+        s.fixed_daily_target = s.daily_target
+        s.fixed_page_target = s.daily_page_target
         
         s.today_docs_val = s.today_docs or 0
         s.total_docs_val = s.total_docs or 0
@@ -165,7 +165,7 @@ def branch_dashboard(request):
     completion_rate = (total_files / branch.total_target * 100) if branch.total_target > 0 else 0
     recent_submissions = base_qs.order_by('-date')[:10]
     
-    fixed_daily_target = 400
+    fixed_daily_target = branch.daily_target
     remaining_files = branch.total_target - total_files
     if remaining_files < 0:
         remaining_files = 0
@@ -273,7 +273,7 @@ def reports_view(request):
             s.total_val = s.total or 0
             s.pages_val = s.pages or 0
             s.daily_avg = s.total_val / days
-            s.period_target = 400 * days
+            s.period_target = s.daily_target * days
             s.performance = (s.total_val / s.period_target * 100) if s.period_target > 0 else 0
             
             overall_total_files += s.total_val
@@ -323,7 +323,7 @@ def reports_view(request):
         
         total_files = submissions.aggregate(Sum('files_digitized_count'))['files_digitized_count__sum'] or 0
         total_pages = submissions.aggregate(Sum('pages_scanned_count'))['pages_scanned_count__sum'] or 0
-        period_target = 400 * days
+        period_target = branch.daily_target * days
         performance = (total_files / period_target * 100) if period_target > 0 else 0
 
         return render(request, 'analytics/reports.html', {
