@@ -576,23 +576,46 @@ def export_pdf(request):
         submissions_q = submissions_q.filter(date__lte=end_date)
     submissions = submissions_q.order_by('-date')
 
-    sub_data = [['ቀን (ኢትዮጵያ)', 'ቅርንጫፍ', 'ፋይሎች', 'ገጾች', 'ኦፕሬተር']]
+    sub_data = [['ቀን (ኢትዮጵያ)', 'ቅርንጫፍ', 'ፋይሎች', 'ገጾች', 'ኦፕሬተር', 'አፈፃፀም %']]
+    total_files = 0
+    total_pages = 0
+    total_target = 0
+
     for sub in submissions:
+        total_files += sub.files_digitized_count
+        total_pages += sub.pages_scanned_count
+        total_target += sub.branch.daily_target
+
+        perf = (sub.files_digitized_count / sub.branch.daily_target * 100) if sub.branch.daily_target > 0 else 0
         sub_data.append([
             to_ethiopian(sub.date),
             sub.branch.name,
             str(sub.files_digitized_count),
             str(sub.pages_scanned_count),
-            sub.operator.username
+            sub.operator.username,
+            f"{perf:.1f}%"
         ])
     
-    sub_table = Table(sub_data, hAlign='LEFT', colWidths=[1.2*inch, 1.5*inch, 1*inch, 1*inch, 2.1*inch])
+    overall_perf = (total_files / total_target * 100) if total_target > 0 else 0
+    sub_data.append([
+        'አጠቃላይ (Total)',
+        '',
+        str(total_files),
+        str(total_pages),
+        '',
+        f"{overall_perf:.1f}%"
+    ])
+    
+    sub_table = Table(sub_data, hAlign='LEFT', colWidths=[1.1*inch, 1.4*inch, 0.8*inch, 0.8*inch, 1.7*inch, 1.0*inch])
     sub_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#10B981")), # Green header
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, -1), main_font),
         ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.whitesmoke),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor("#E2E8F0")), # Grey background for Total row
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
     elements.append(sub_table)
