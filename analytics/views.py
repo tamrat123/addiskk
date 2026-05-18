@@ -101,19 +101,29 @@ def hq_dashboard(request):
         curr += datetime.timedelta(days=1)
 
     # Monthly Trend (Last 6 Months)
-    monthly_subs = DailyWorkSubmission.objects.annotate(month=TruncMonth('date')) \
-        .values('month') \
-        .annotate(count=Sum('files_digitized_count')) \
-        .order_by('month')[:6]
-    monthly_trends = []
-    for s in monthly_subs:
-        m_date = s['month']
+    from collections import defaultdict
+    start_date_monthly = today - datetime.timedelta(days=180)
+    recent_subs = DailyWorkSubmission.objects.filter(date__gte=start_date_monthly).values('date', 'files_digitized_count')
+    
+    monthly_data = defaultdict(int)
+    for sub in recent_subs:
+        d = sub['date']
         try:
-            eth_date = EthiopianDateConverter.to_ethiopian(m_date.year, m_date.month, m_date.day)
-            label = months_am[eth_date.month-1]
+            eth_date = EthiopianDateConverter.to_ethiopian(d.year, d.month, d.day)
+            key = (eth_date.year, eth_date.month)
         except:
-            label = m_date.strftime('%B')
-        monthly_trends.append({'label': label, 'count': s['count']})
+            key = (d.year, d.month)
+        monthly_data[key] += sub['files_digitized_count']
+
+    sorted_months = sorted(monthly_data.keys())[-6:]
+    monthly_trends = []
+    for key in sorted_months:
+        y, m = key
+        try:
+            label = months_am[m-1]
+        except:
+            label = datetime.date(y, m, 1).strftime('%B')
+        monthly_trends.append({'label': label, 'count': monthly_data[key]})
     
     # Branch Distribution (Pie Chart Data)
     branch_dist = [{'label': b.name, 'count': b.total_docs or 0} for b in branch_stats if (b.total_docs or 0) > 0]
