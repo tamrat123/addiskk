@@ -456,9 +456,39 @@ def export_pdf(request):
     )
     elements.append(Paragraph(report_title, subtitle_style))
     
+    # Calculate days for performance
+    days = 1
+    start_date_obj, end_date_obj = None, None
+    if start_date and end_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+            days = (end_date_obj - start_date_obj).days + 1
+            if days < 1: days = 1
+        except ValueError: pass
+    elif start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+            days = (datetime.date.today() - start_date_obj).days + 1
+            if days < 1: days = 1
+        except ValueError: pass
+
     # Period
+    from ethiopian_date import EthiopianDateConverter
+    months_am = ["መስከረም", "ጥቅምት", "ህዳር", "ታህሳስ", "ጥር", "የካቲት", "መጋቢት", "ሚያዝያ", "ግንቦት", "ሰኔ", "ሐምሌ", "ነሐሴ", "ጳጉሜ"]
+    def to_amharic_date(date_obj):
+        if not date_obj: return None
+        try:
+            e = EthiopianDateConverter.to_ethiopian(date_obj.year, date_obj.month, date_obj.day)
+            return f"{e.day} {months_am[e.month-1]} {e.year}"
+        except:
+            return date_obj.strftime('%Y-%m-%d')
+
+    am_start = to_amharic_date(start_date_obj) if start_date_obj else 'ከመጀመሪያ'
+    am_end = to_amharic_date(end_date_obj) if end_date_obj else 'ዛሬ'
+
     normal_am_style = ParagraphStyle('NormalAm', parent=styles['Normal'], fontName=main_font)
-    period_text = f"የሪፖርት ጊዜ: {start_date or 'ከመጀመሪያ'} እስከ {end_date or 'ዛሬ'}"
+    period_text = f"የሪፖርት ጊዜ: {am_start} እስከ {am_end}"
     elements.append(Paragraph(period_text, normal_am_style))
     elements.append(Spacer(1, 0.2*inch))
     
@@ -466,30 +496,68 @@ def export_pdf(request):
     summary_header = ParagraphStyle('SummaryHeader', parent=subtitle_style, spaceBefore=12)
     elements.append(Paragraph("የቅርንጫፎች አጠቃላይ አፈፃፀም ማጠቃለያ", summary_header))
     
-    data = [['የቅርንጫፍ ስም', 'ዲጂታይዝ የተደረጉ', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ']]
+    data = [['የቅርንጫፍ ስም', 'ዲጂታይዝ የተደረጉ', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ', 'አፈፃፀም %']]
     branch_stats = branches.annotate(
         total_files=Sum('dailyworksubmission__files_digitized_count', filter=q_filter),
         total_pages=Sum('dailyworksubmission__pages_scanned_count', filter=q_filter)
     )
     
+    overall_files = 0
+    overall_pages = 0
+    overall_daily_target = 0
+    overall_total_target = 0
+
     for stat in branch_stats:
+        t_files = stat.total_files or 0
+        t_pages = stat.total_pages or 0
+        overall_files += t_files
+        overall_pages += t_pages
+        overall_daily_target += stat.daily_target
+        overall_total_target += stat.total_target
+
+        if start_date or end_date:
+            period_target = stat.daily_target * days
+            perf = (t_files / period_target * 100) if period_target > 0 else 0
+        else:
+            perf = (t_files / stat.total_target * 100) if stat.total_target > 0 else 0
+
         data.append([
             stat.name,
-            str(stat.total_files or 0),
-            str(stat.total_pages or 0),
+            str(t_files),
+            str(t_pages),
             str(stat.daily_target),
-            str(stat.total_target)
+            str(stat.total_target),
+            f"{perf:.1f}%"
         ])
+
+    # Add Overall Row
+    if start_date or end_date:
+        overall_target = overall_daily_target * days
+        overall_perf = (overall_files / overall_target * 100) if overall_target > 0 else 0
+    else:
+        overall_perf = (overall_files / overall_total_target * 100) if overall_total_target > 0 else 0
+
+    data.append([
+        'አጠቃላይ (Total)',
+        str(overall_files),
+        str(overall_pages),
+        str(overall_daily_target),
+        str(overall_total_target),
+        f"{overall_perf:.1f}%"
+    ])
     
-    table = Table(data, hAlign='LEFT', colWidths=[2.2*inch, 1.4*inch, 1.4*inch, 0.9*inch, 0.9*inch])
+    table = Table(data, hAlign='LEFT', colWidths=[1.8*inch, 1.2*inch, 1.3*inch, 0.8*inch, 0.9*inch, 1.0*inch])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4F46E5")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, -1), main_font),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.whitesmoke),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor("#E2E8F0")), # Grey background for Total row
+        ('FONTNAME', (0, -1), (-1, -1), main_font), # Bold not fully supported without specific font file, use main font
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
     elements.append(table)
