@@ -15,8 +15,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title m-0">Performance Data</h5>
                     <div class="btn-group">
-                        <a href="{% url 'export_excel' %}?start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
-                        <a href="{% url 'export_pdf' %}?start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}" class="btn btn-outline-danger btn-sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                        <a href="{% url 'export_excel' %}?start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}&branch={{ selected_branch_id|default:'' }}" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+                        <a href="{% url 'export_pdf' %}?start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}&branch={{ selected_branch_id|default:'' }}" class="btn btn-outline-danger btn-sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
                     </div>
                 </div>
 
@@ -33,6 +33,29 @@
                     {% endif %}
                 </div>
                 <form method="get" class="row g-3 mb-4 align-items-end">
+                    {% if is_hq %}
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">ከቀን ({% trans "Start Date" %})</label>
+                        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">እስከ ቀን ({% trans "End Date" %})</label>
+                        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">ቅርንጫፍ ({% trans "Branch" %})</label>
+                        <select name="branch" class="form-select form-select-sm">
+                            <option value="">{% trans "All Branches" %}</option>
+                            {% for b in branches_list %}
+                                <option value="{{ b.id }}" {% if selected_branch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">አጣራ (Filter)</button>
+                        <a href="{% url 'reports' %}" class="btn btn-outline-secondary btn-sm flex-grow-1">ሁሉንም (Reset)</a>
+                    </div>
+                    {% else %}
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">ከቀን ({% trans "Start Date" %})</label>
                         <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}">
@@ -47,6 +70,7 @@
                     <div class="col-md-2">
                         <a href="{% url 'reports' %}" class="btn btn-outline-secondary btn-sm w-100">ሁሉንም (Reset)</a>
                     </div>
+                    {% endif %}
                 </form>
                 
                 <div class="table-responsive">

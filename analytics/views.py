@@ -262,6 +262,7 @@ def branch_list_view(request):
 def reports_view(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    branch_id = request.GET.get('branch')
     
     start_date_obj = None
     end_date_obj = None
@@ -283,6 +284,8 @@ def reports_view(request):
             end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
         except ValueError: pass
 
+    branches_list = Branch.objects.all().order_by('name')
+
     if request.user.role in ['HQ_ADMIN', 'BRANCH_MANAGER']:
         q_filter = Q()
         if start_date:
@@ -294,6 +297,9 @@ def reports_view(request):
             total=Sum('dailyworksubmission__files_digitized_count', filter=q_filter),
             pages=Sum('dailyworksubmission__pages_scanned_count', filter=q_filter)
         )
+        
+        if branch_id:
+            stats = stats.filter(id=branch_id)
         
         overall_total_files = 0
         overall_total_pages = 0
@@ -318,6 +324,8 @@ def reports_view(request):
             submissions_q = submissions_q.filter(date__gte=start_date)
         if end_date:
             submissions_q = submissions_q.filter(date__lte=end_date)
+        if branch_id:
+            submissions_q = submissions_q.filter(branch_id=branch_id)
         submissions = submissions_q.order_by('-date')
 
         return render(request, 'analytics/reports.html', {
@@ -329,6 +337,8 @@ def reports_view(request):
             'start_date_obj': start_date_obj,
             'end_date_obj': end_date_obj,
             'days': days,
+            'branches_list': branches_list,
+            'selected_branch_id': int(branch_id) if branch_id and branch_id.isdigit() else None,
             'overall': {
                 'files': overall_total_files,
                 'pages': overall_total_pages,
@@ -364,6 +374,8 @@ def reports_view(request):
             'end_date': end_date,
             'start_date_obj': start_date_obj,
             'end_date_obj': end_date_obj,
+            'branches_list': branches_list,
+            'selected_branch_id': int(branch_id) if branch_id and branch_id.isdigit() else None,
             'summary': {
                 'files': total_files,
                 'pages': total_pages,
@@ -377,6 +389,7 @@ def reports_view(request):
 def export_excel(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    branch_id = request.GET.get('branch')
     
     if start_date == 'None' or not start_date: start_date = None
     if end_date == 'None' or not end_date: end_date = None
@@ -391,6 +404,9 @@ def export_excel(request):
     branches = Branch.objects.all()
     if request.user.role != 'HQ_ADMIN':
         return HttpResponse("Unauthorized", status=403)
+
+    if branch_id:
+        branches = branches.filter(id=branch_id)
 
     output = BytesIO()
     workbook = xlsxwriter.Workbook(output)
@@ -438,6 +454,7 @@ def export_pdf(request):
 
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    branch_id = request.GET.get('branch')
     
     if start_date == 'None' or not start_date: start_date = None
     if end_date == 'None' or not end_date: end_date = None
@@ -452,7 +469,14 @@ def export_pdf(request):
         return HttpResponse("Unauthorized", status=403)
     
     branches = Branch.objects.all()
-    report_title = "ጠቅላላ የቅርንጫፍ አፈፃፀም ሪፖርት"
+    if branch_id:
+        branches = branches.filter(id=branch_id)
+        if branches.exists():
+            report_title = f"{branches.first().name} የቅርንጫፍ አፈፃፀም ሪፖርት"
+        else:
+            report_title = "የቅርንጫፍ አፈፃፀም ሪፖርት"
+    else:
+        report_title = "ጠቅላላ የቅርንጫፍ አፈፃፀም ሪፖርት"
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
