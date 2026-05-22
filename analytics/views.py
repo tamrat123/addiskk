@@ -310,13 +310,15 @@ def reports_view(request):
             s.pages_val = s.pages or 0
             s.daily_avg = s.total_val / days
             s.period_target = s.daily_target * days
-            s.performance = (s.total_val / s.period_target * 100) if s.period_target > 0 else 0
+            s.performance = (s.total_val / s.total_target * 100) if s.total_target > 0 else 0
             
             overall_total_files += s.total_val
             overall_total_pages += s.pages_val
             overall_total_target += s.period_target
             
-        overall_performance = (overall_total_files / overall_total_target * 100) if overall_total_target > 0 else 0
+        # Sum of total targets for overall performance
+        overall_total_proj_target = sum(s.total_target for s in stats)
+        overall_performance = (overall_total_files / overall_total_proj_target * 100) if overall_total_proj_target > 0 else 0
 
         # Detailed submissions list for HQ
         submissions_q = DailyWorkSubmission.objects.all()
@@ -364,7 +366,7 @@ def reports_view(request):
         total_files = submissions.aggregate(Sum('files_digitized_count'))['files_digitized_count__sum'] or 0
         total_pages = submissions.aggregate(Sum('pages_scanned_count'))['pages_scanned_count__sum'] or 0
         period_target = branch.daily_target * days
-        performance = (total_files / period_target * 100) if period_target > 0 else 0
+        performance = (total_files / branch.total_target * 100) if branch.total_target > 0 else 0
 
         return render(request, 'analytics/reports.html', {
             'submissions': submissions, 
@@ -559,11 +561,7 @@ def export_pdf(request):
     # Pre-calculate performance percentage for sorting
     for stat in branch_stats:
         t_files = stat.total_files or 0
-        if start_date or end_date:
-            period_target = stat.daily_target * days
-            stat.computed_perf = (t_files / period_target * 100) if period_target > 0 else 0
-        else:
-            stat.computed_perf = (t_files / stat.total_target * 100) if stat.total_target > 0 else 0
+        stat.computed_perf = (t_files / stat.total_target * 100) if stat.total_target > 0 else 0
 
     # Sort branch_stats by computed_perf in descending order (highest performance first)
     branch_stats.sort(key=lambda s: s.computed_perf, reverse=True)
@@ -592,12 +590,7 @@ def export_pdf(request):
             f"{perf:.1f}%"
         ])
 
-    # Add Overall Row
-    if start_date or end_date:
-        overall_target = overall_daily_target * days
-        overall_perf = (overall_files / overall_target * 100) if overall_target > 0 else 0
-    else:
-        overall_perf = (overall_files / overall_total_target * 100) if overall_total_target > 0 else 0
+    overall_perf = (overall_files / overall_total_target * 100) if overall_total_target > 0 else 0
 
     data.append([
         'አጠቃላይ (Total)',
