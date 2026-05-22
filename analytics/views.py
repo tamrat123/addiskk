@@ -414,7 +414,7 @@ def export_excel(request):
     workbook = xlsxwriter.Workbook(output)
     worksheet = workbook.add_worksheet('Branch Statistics')
     header_fmt = workbook.add_format({'bold': True, 'bg_color': '#4F46E5', 'font_color': 'white'})
-    headers = ['የቅርንጫፍ ስም', 'ስካን የተደረጉ ፋይል ብዛት', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ']
+    headers = ['የቅርንጫፍ ስም', 'ስካን የተደረጉ ፋይል ብዛት', 'ስካን የተደረጉ ገጾች', 'የቀን ግብ', 'ጠቅላላ ግብ', 'አፈፃፀም %']
     for col, header in enumerate(headers):
         worksheet.write(0, col, header, header_fmt)
     
@@ -428,6 +428,10 @@ def export_excel(request):
         worksheet.write(row, 2, stat.total_pages or 0)
         worksheet.write(row, 3, stat.daily_target)
         worksheet.write(row, 4, stat.total_target)
+        
+        t_files = stat.total_files or 0
+        perf = (t_files / stat.total_target * 100) if stat.total_target > 0 else 0
+        worksheet.write(row, 5, f"{perf:.1f}%")
     
     workbook.close()
     output.seek(0)
